@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<DTE xmlns="http://www.sii.cl/SiiDte" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" version="1.0">
+  <Documento ID="F123T33">
+    <Encabezado>
+      <IdDoc>
+        <TipoDTE>33</TipoDTE>
+        <Folio>123</Folio>
+        <FchEmis>2026-05-14</FchEmis>
+      </IdDoc>
+      <Emisor>
+        <RUTEmisor>76123456-7</RUTEmisor>
+        <RznSoc>HME Fact SpA</RznSoc>
+        <GiroEmis>Servicios informaticos</GiroEmis>
+        <DirOrigen>Av Providencia 123</DirOrigen>
+        <CmnaOrigen>Providencia</CmnaOrigen>
+        <CiudadOrigen>Santiago</CiudadOrigen>
+      </Emisor>
+      <Receptor>
+        <RUTRecep>76876543-2</RUTRecep>
+        <RznSocRecep>Cliente Demo SpA</RznSocRecep>
+        <GiroRecep>Comercio</GiroRecep>
+        <DirRecep>Alameda 456</DirRecep>
+        <CmnaRecep>Santiago</CmnaRecep>
+        <CiudadRecep>Santiago</CiudadRecep>
+      </Receptor>
+      <Totales>
+        <MntNeto>10000</MntNeto>
+        <TasaIVA>19</TasaIVA>
+        <IVA>1900</IVA>
+        <MntTotal>11900</MntTotal>
+      </Totales>
+    </Encabezado>
+    <Detalle>
+      <NroLinDet>1</NroLinDet>
+      <NmbItem>Servicio de facturacion electronica</NmbItem>
+      <QtyItem>1</QtyItem>
+      <UnmdItem>UN</UnmdItem>
+      <PrcItem>10000</PrcItem>
+      <MontoItem>10000</MontoItem>
+    </Detalle>
+    <TED version="1.0">
+      <DD>
+        <RE>76123456-7</RE>
+        <TD>33</TD>
+        <F>123</F>
+        <FE>2026-05-14</FE>
+        <RR>76876543-2</RR>
+        <RSR>Cliente Demo SpA</RSR>
+        <MNT>11900</MNT>
+        <IT1>Servicio de facturacion electronica</IT1>
+        <CAF>CAF_PLACEHOLDER</CAF>
+        <TSTED>2026-05-14T10:00:00+00:00</TSTED>
+      </DD>
+      <FRMT algoritmo="SHA1withRSA">TED_SIGNATURE_PLACEHOLDER</FRMT>
+    </TED>
+    <TmstFirma>2026-05-14T10:00:00+00:00</TmstFirma>
+  </Documento>
+</DTE>

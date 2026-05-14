@@ -1,0 +1,98 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hme-fact-backend
+    env_file:
+      - ${APP_ENV_FILE:-.env.example}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./app:/app/app
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: "true"
+    container_name: hme-fact-backend-test
+    env_file:
+      - .env.test
+    environment:
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: 5432
+      PYTEST_DOCKER: "1"
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+      - ./pytest.ini:/app/pytest.ini
+      - ./htmlcov:/app/htmlcov
+    command: pytest
+    profiles:
+      - test
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: hme-fact-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hme_fact}
+      POSTGRES_USER: ${POSTGRES_USER:-hme_fact}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hme_fact}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hme_fact} -d ${POSTGRES_DB:-hme_fact}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: hme-fact-postgres-test
+    environment:
+      POSTGRES_DB: ${TEST_POSTGRES_DB:-hme_fact_test}
+      POSTGRES_USER: ${TEST_POSTGRES_USER:-hme_fact_test}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-hme_fact_test}
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEST_POSTGRES_USER:-hme_fact_test} -d ${TEST_POSTGRES_DB:-hme_fact_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    profiles:
+      - test
+
+  redis:
+    image: redis:7-alpine
+    container_name: hme-fact-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

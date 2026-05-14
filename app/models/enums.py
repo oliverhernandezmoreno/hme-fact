@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+import enum
+
+
+class UserRole(str, enum.Enum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    ACCOUNTANT = "accountant"
+    BILLING = "billing"
+    VIEWER = "viewer"
+
+
+class DTEStatus(str, enum.Enum):
+    DRAFT = "draft"
+    SIGNED = "signed"
+    SENT = "sent"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+
+
+class DTEEventType(str, enum.Enum):
+    CREATED = "created"
+    SIGNED = "signed"
+    SENT_TO_SII = "sent_to_sii"
+    SII_ACCEPTED = "sii_accepted"
+    SII_REJECTED = "sii_rejected"
+    CANCELLED = "cancelled"
+
+
+class DTEXmlType(str, enum.Enum):
+    UNSIGNED_DTE = "unsigned_dte"
+    SIGNED_DTE = "signed_dte"
+    ENVELOPE = "envelope"
+    SII_RESPONSE = "sii_response"
+
+
+class DTEType(enum.IntEnum):
+    FACTURA_ELECTRONICA = 33
+    FACTURA_EXENTA = 34
+    BOLETA_ELECTRONICA = 39
+    BOLETA_EXENTA = 41
+    NOTA_DEBITO = 56
+    NOTA_CREDITO = 61
