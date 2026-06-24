@@ -104,3 +104,13 @@ class DTE(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         cascade="all, delete-orphan",
         order_by="DTEXml.created_at.desc()",
     )
+    transmissions: Mapped[list["DTETransmission"]] = relationship(
+        back_populates="dte",
+        cascade="all, delete-orphan",
+        order_by="DTETransmission.created_at.desc()",
+    )
+    status_history: Mapped[list["DTEStatusHistory"]] = relationship(
+        back_populates="dte",
+        cascade="all, delete-orphan",
+        order_by="DTEStatusHistory.created_at.desc()",
+    )

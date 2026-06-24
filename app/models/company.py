@@ -26,6 +26,9 @@ class Company(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     sii_resolution_number: Mapped[int | None] = mapped_column(Integer)
     sii_resolution_date: Mapped[date | None] = mapped_column(Date)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    onboarding_step: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    is_onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ip_allowlist: Mapped[list[str] | None] = mapped_column(String) # Will be mapped as JSON or String list in DB
 
     users: Mapped[list["CompanyUser"]] = relationship(
         back_populates="company",

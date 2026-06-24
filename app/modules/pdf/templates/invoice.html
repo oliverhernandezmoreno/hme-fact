@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura Electrónica</title>
+    <style>
+        @page { size: letter portrait; margin: 2cm; }
+        body { font-family: Helvetica, sans-serif; font-size: 10pt; }
+        .header { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .logo { width: 40%; float: left; }
+        .logo img { max-width: 200px; max-height: 80px; }
+        .issuer-info { width: 55%; float: right; text-align: right; }
+        .issuer-info h1 { margin: 0; font-size: 14pt; color: #333; }
+        .folio-box { border: 2px solid #c00; padding: 10px; text-align: center; margin-top: 10px; color: #c00; font-weight: bold; }
+        .receiver-info { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        th { background-color: #eee; font-weight: bold; }
+        .totals { width: 40%; float: right; margin-bottom: 20px; }
+        .totals table { width: 100%; }
+        .barcode { text-align: center; margin-top: 40px; }
+        .barcode img { width: 300px; height: 100px; }
+        .footer { text-align: center; font-size: 8pt; margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; }
+        .clear { clear: both; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Logo">
+            {% else %}
+            <div style="font-size: 24pt; font-weight: bold;">{{ issuer.legal_name }}</div>
+            {% endif %}
+        </div>
+        <div class="issuer-info">
+            <h1>{{ issuer.legal_name }}</h1>
+            <p>RUT: {{ issuer.rut }}<br>
+               Giro: {{ issuer.giro }}<br>
+               Dirección: {{ issuer.address }}, {{ issuer.comuna }}, {{ issuer.city }}</p>
+            <div class="folio-box">
+                RUT: {{ issuer.rut }}<br>
+                {{ dte_type_name }}<br>
+                N° {{ folio }}
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div class="receiver-info">
+        <strong>Señor(es):</strong> {{ receiver.legal_name }}<br>
+        <strong>RUT:</strong> {{ receiver.rut }}<br>
+        <strong>Giro:</strong> {{ receiver.giro }}<br>
+        <strong>Dirección:</strong> {{ receiver.address }}, {{ receiver.comuna }}, {{ receiver.city }}<br>
+        <strong>Fecha Emisión:</strong> {{ issue_date }}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Descuento</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>${{ item.unit_price }}</td>
+                <td>${{ item.discount_amount }}</td>
+                <td>${{ item.net_amount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <table>
+            <tr><th>Monto Neto:</th><td>${{ totals.net_amount }}</td></tr>
+            <tr><th>Monto Exento:</th><td>${{ totals.exempt_amount }}</td></tr>
+            <tr><th>IVA (19%):</th><td>${{ totals.tax_amount }}</td></tr>
+            <tr><th>Monto Total:</th><td>${{ totals.total_amount }}</td></tr>
+        </table>
+    </div>
+    <div class="clear"></div>
+
+    <div class="barcode">
+        {% if ted_base64 %}
+        <img src="data:image/png;base64,{{ ted_base64 }}" alt="Timbre Electrónico SII">
+        <p style="font-size: 8pt; margin-top: 5px;">Timbre Electrónico SII<br>Res. {{ issuer.resolution_number }} de {{ issuer.resolution_date }} Verifique documento: www.sii.cl</p>
+        {% else %}
+        <div style="border: 1px dashed #000; padding: 20px; display: inline-block;">TIMBRE ELECTRÓNICO EN PREPARACIÓN</div>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        El acuse de recibo que se declara en este acto, de acuerdo a lo dispuesto en la letra b) del Art. 4° y la letra c) del Art. 5° de la Ley 19.983, acredita que la entrega de mercaderías o servicio(s) prestado(s) ha(n) sido recibido(s).
+    </div>
+</body>
+</html>

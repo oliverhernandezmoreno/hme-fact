@@ -26,6 +26,7 @@ class Certificate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     common_name: Mapped[str] = mapped_column(String(255), nullable=False)
     serial_number: Mapped[str] = mapped_column(String(128), nullable=False)
     encrypted_pfx: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    encrypted_password: Mapped[bytes | None] = mapped_column(LargeBinary)
     valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

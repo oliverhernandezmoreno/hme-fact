@@ -39,6 +39,27 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str = "ChangeMe123!"
     FIRST_SUPERUSER_FULL_NAME: str = "Platform Admin"
     SII_BASE_URL: str = "https://api.sii.example.local"
+    SII_PROVIDER: str = "simpleapi"
+    SIMPLEAPI_BASE_URL: str = "https://api.simpleapi.cl"
+    SIMPLEAPI_API_KEY: str = ""
+    SIMPLEAPI_TIMEOUT: float = 30.0
+    TAX_PROVIDER_MAX_RETRIES: int = 3
+    TAX_PROVIDER_BACKOFF_BASE_SECONDS: float = 0.5
+
+    CELERY_BROKER_URL: RedisDsn | str = "redis://redis:6379/2"
+    CELERY_RESULT_BACKEND: RedisDsn | str = "redis://redis:6379/2"
+
+    SMTP_HOST: str = "mailhog"
+    SMTP_PORT: int = 1025
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@hmefact.cl"
+
+    FILE_STORAGE_DRIVER: Literal["local"] = "local"
+    LOCAL_STORAGE_PATH: str = "/tmp/hme_fact_storage"
+
+    PDF_RENDERER: Literal["reportlab", "xhtml2pdf"] = "xhtml2pdf"
+    CERTIFICATE_ENCRYPTION_KEY: str = "replace-this-with-a-32-byte-key!"
 
     @computed_field  # type: ignore[prop-decorator]
     @property

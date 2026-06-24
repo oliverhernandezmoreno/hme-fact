@@ -13,20 +13,32 @@ class UserRole(str, enum.Enum):
 
 class DTEStatus(str, enum.Enum):
     DRAFT = "draft"
+    GENERATED = "generated"
+    QUEUED = "queued"
     SIGNED = "signed"
     SENT = "sent"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
+    PARTIALLY_ACCEPTED = "partially_accepted"
+    ERROR = "error"
     CANCELLED = "cancelled"
+    PDF_GENERATED = "pdf_generated"
+    EMAILED = "emailed"
 
 
 class DTEEventType(str, enum.Enum):
     CREATED = "created"
+    GENERATED = "generated"
+    QUEUED = "queued"
     SIGNED = "signed"
     SENT_TO_SII = "sent_to_sii"
     SII_ACCEPTED = "sii_accepted"
     SII_REJECTED = "sii_rejected"
+    SII_STATUS_CHECKED = "sii_status_checked"
+    SII_ERROR = "sii_error"
     CANCELLED = "cancelled"
+    PDF_GENERATED = "pdf_generated"
+    EMAILED = "emailed"
 
 
 class DTEXmlType(str, enum.Enum):
