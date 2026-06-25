@@ -88,6 +88,43 @@ async def send_dte(
         ) from exc
 
 
+@router.post(
+    "/{dte_id}/emit",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Emitir DTE al SII usando el Motor Nativo (Fase 8)",
+)
+async def emit_dte_native(
+    dte_id: uuid.UUID,
+    session: SessionDep,
+    company_id: TenantDep,
+) -> dict[str, str]:
+    from sqlalchemy import select
+    from app.models import DTE
+    from app.workers.tasks.dte_emission import emit_dte_task
+
+    dte = await session.get(DTE, dte_id)
+    if not dte or dte.company_id != company_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="DTE not found")
+
+    if dte.status != DTEStatus.DRAFT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"DTE debe estar en estado DRAFT para emitirse. Estado actual: {dte.status}"
+        )
+
+    # El cambio a "QUEUED" previene que se emita dos veces mientras Celery lo toma
+    dte.status = DTEStatus.QUEUED
+    await session.commit()
+
+    # Disparar Job
+    emit_dte_task.delay(str(dte_id))
+    
+    return {
+        "message": "DTE queued for native emission to SII successfully",
+        "status": "QUEUED"
+    }
+
+
 @router.get("/{dte_id}/status", response_model=DTEStatusResponse)
 async def get_dte_status(
     dte_id: uuid.UUID,

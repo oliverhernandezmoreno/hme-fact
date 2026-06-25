@@ -13,6 +13,8 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Plug,
+  Webhook,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,6 +34,8 @@ const saasNav = [
   { href: "/subscription", label: "Plan & Consumo", icon: CreditCard },
   { href: "/api-keys", label: "API Keys", icon: KeyRound },
   { href: "/onboarding", label: "Onboarding", icon: ListChecks },
+  { href: "/integrations", label: "Integrations Hub", icon: Plug },
+  { href: "/integrations/webhooks", label: "Webhooks", icon: Webhook },
 ];
 
 const adminNav = [
@@ -69,7 +73,7 @@ export function Sidebar() {
           O
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight">OhmEFACT</p>
+          <p className="truncate text-sm font-semibold leading-tight">hmEFact</p>
           <p className="text-xs text-muted-foreground">Facturación SaaS</p>
         </div>
       </div>

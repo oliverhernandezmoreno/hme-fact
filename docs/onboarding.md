@@ -1,68 +1,39 @@
-# Onboarding Empresarial — OhmEFACT Fase 6
+# Onboarding Architecture (Phase 7A)
 
-## Wizard de 8 Pasos
+## Overview
+This document describes the architectural implementation of the OhmEFACT Intelligent Onboarding Platform, a completely modular, decoupled onboarding system for new companies.
 
-| Paso | Descripción | Obligatorio |
-|---|---|---|
-| 1 | Datos de empresa (RUT, razón social, giro, dirección) | ✅ |
-| 2 | Configuración tributaria (N° resolución SII, fecha) | ✅ |
-| 3 | Certificado digital (PFX/P12) | ✅ |
-| 4 | Carga de CAF (Código de Autorización de Folios) | ✅ |
-| 5 | Configuración de correo (SMTP) | ⚡ Recomendado |
-| 6 | Logo corporativo | ⚡ Opcional |
-| 7 | Usuario administrador | ✅ |
-| 8 | Validación final | ✅ |
+## Database Schema
+The database uses three decoupled tables to track state:
+1. `onboarding_sessions`: Tracks the company's overall progress.
+2. `onboarding_steps`: Holds dynamic metadata about the steps (order, title).
+3. `onboarding_step_status`: M:N relation tracking completions and durations per session/step.
 
-## Endpoints
+## Directory Structure
+The module lives primarily in `frontend/src/modules/onboarding` and `app/api/v1/endpoints/onboarding`.
 
-```
-GET  /api/v1/onboarding                      → Progreso actual
-POST /api/v1/onboarding/step/{n}             → Completar paso N con datos
-POST /api/v1/onboarding/step/{n}/skip        → Saltar paso opcional
-POST /api/v1/onboarding/complete             → Marcar como finalizado
-```
+### Backend Stack
+- **Entities:** SQLAlchemy models (`OnboardingSession`, `OnboardingStep`, `OnboardingStepStatus`).
+- **DTOs:** Pydantic schemas (`OnboardingStartRequest`, `OnboardingProgressResponse`).
+- **API:** Dedicated `APIRouter` attached to `/api/v1/onboarding`.
 
-## Ejemplo: Completar Paso 1
+### Frontend Stack
+- **Context/Store:** Zustand store (`useOnboardingStore`) for state persistence.
+- **Components:** `OnboardingSidebar`, `HelpPanel`, `DocumentUploader`, `ProgressStepper`.
 
-```bash
-POST /api/v1/onboarding/step/1
-X-Company-ID: <uuid>
+## Design Constraints
+- Never couple `Onboarding` directly to `Dashboard`.
+- Do not hardcode step counts. Use the step list provided by `GET /api/v1/onboarding/steps`.
+- Clean Architecture principles applied.
 
-{
-  "data": {
-    "legal_name": "Empresa Demo SpA",
-    "fantasy_name": "DemoShop",
-    "address": "Av. Providencia 1234",
-    "comuna": "Providencia",
-    "city": "Santiago"
-  }
-}
-
-# Respuesta
-{
-  "step": 1,
-  "completed": true,
-  "is_onboarding_completed": false,
-  "progress_pct": 12,
-  "completed_steps": [1]
-}
-```
-
-## Progreso
-
-```json
-{
-  "current_step": 3,
-  "total_steps": 8,
-  "completed_steps": [1, 2],
-  "skipped_steps": [],
-  "progress_pct": 25,
-  "is_completed": false,
-  "next_step": 3,
-  "next_step_label": "Certificado digital"
-}
-```
-
-## Auto-completado
-
-El wizard se marca automáticamente como completado cuando todos los pasos obligatorios están en `completed_steps` o `skipped_steps`.
+## Steps Defined
+1. Bienvenida (Welcome)
+2. Empresa (Company details)
+3. Configuración Tributaria (Tax configs)
+4. Certificado Digital (PFX upload)
+5. CAF (CAF upload)
+6. Usuarios (Invite users)
+7. Productos (Create/Import)
+8. Clientes (Create/Import)
+9. Primera Factura (Issue first DTE)
+10. Finalización (Success page & Redirect)

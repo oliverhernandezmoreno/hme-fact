@@ -16,7 +16,7 @@ export async function listCustomers(params: ListParams = {}): Promise<Customer[]
 export async function createCustomer(payload: CustomerPayload): Promise<Customer> {
   if (isMockMode) {
     await delay(600);
-    return { ...payload, id: crypto.randomUUID(), company_id: "11111111-1111-1111-1111-111111111111", is_active: true };
+    return { ...payload, id: crypto.randomUUID(), company_id: "11111111-1111-1111-1111-111111111111", is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
   }
   const response = await apiClient.post<Customer>("/customers", payload);
   return response.data;

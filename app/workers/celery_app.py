@@ -14,6 +14,7 @@ celery_app = Celery(
     backend=str(settings.CELERY_RESULT_BACKEND),
     include=[
         "app.workers.tasks.dte_tasks",
+        "app.workers.tasks.dte_emission",
         "app.workers.tasks.billing_tasks",  # Fase 6
     ],
 )

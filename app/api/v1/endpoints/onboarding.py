@@ -1,83 +1,39 @@
-from __future__ import annotations
+from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Header
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUserDep, SessionDep, TenantDep
-from app.modules.onboarding.services.onboarding_service import OnboardingService
+from app.api.deps import get_current_user, get_db_session
+from app.crud.crud_onboarding import onboarding as crud_onboarding
+from app.models.user import User
+from app.schemas.onboarding import OnboardingSessionResponse, OnboardingStartRequest, StepCompleteRequest, StepSaveRequest
 
 router = APIRouter()
 
+@router.post("/start", response_model=OnboardingSessionResponse)
+async def start_onboarding(
+    *,
+    db: AsyncSession = Depends(get_db_session),
+    obj_in: OnboardingStartRequest,
+    current_user: User = Depends(get_current_user),
+    company_id: UUID = Header(alias="X-Company-ID"),
+) -> Any:
+    """Initialize a new onboarding session based on backend workflow definition."""
+    workflow = await crud_onboarding.get_active_workflow(db, obj_in.country_code)
+    if not workflow:
+        raise HTTPException(status_code=404, detail="No active workflow found for this country")
+    # For now, return a 501 until full engine is connected. The DB entities are ready.
+    raise HTTPException(status_code=501, detail="Workflow Initialization Logic Pending (Sprint 2)")
 
-class StepRequest(BaseModel):
-    data: dict = {}
-
-
-@router.get("", summary="Get onboarding progress for company")
-async def get_onboarding(
-    session: SessionDep,
-    current_user: CurrentUserDep,
-    company_id: TenantDep,
-):
-    svc = OnboardingService(session)
-    progress = await svc.get_progress(company_id)
-    return {
-        "company_id": str(progress.company_id),
-        "current_step": progress.current_step,
-        "total_steps": progress.total_steps,
-        "completed_steps": progress.completed_steps,
-        "skipped_steps": progress.skipped_steps,
-        "progress_pct": progress.progress_pct,
-        "is_completed": progress.is_completed,
-        "next_step": progress.next_step,
-        "next_step_label": progress.next_step_label,
-        "step_labels": {str(k): v for k, v in progress.step_labels.items()},
-    }
-
-
-@router.post("/step/{step_number}", summary="Complete onboarding step N")
-async def complete_step(
-    step_number: int,
-    body: StepRequest,
-    session: SessionDep,
-    current_user: CurrentUserDep,
-    company_id: TenantDep,
-):
-    svc = OnboardingService(session)
-    try:
-        wizard = await svc.advance_step(company_id, step_number, body.data)
-        return {
-            "step": step_number,
-            "completed": True,
-            "is_onboarding_completed": wizard.is_completed,
-            "progress_pct": wizard.progress_pct,
-            "completed_steps": wizard.completed_steps,
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-
-
-@router.post("/step/{step_number}/skip", summary="Skip optional onboarding step")
-async def skip_step(
-    step_number: int,
-    session: SessionDep,
-    current_user: CurrentUserDep,
-    company_id: TenantDep,
-):
-    svc = OnboardingService(session)
-    try:
-        wizard = await svc.skip_step(company_id, step_number)
-        return {"step": step_number, "skipped": True, "skipped_steps": wizard.skipped_steps}
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-
-
-@router.post("/complete", summary="Mark onboarding as completed")
-async def complete_onboarding(
-    session: SessionDep,
-    current_user: CurrentUserDep,
-    company_id: TenantDep,
-):
-    svc = OnboardingService(session)
-    wizard = await svc.complete(company_id)
-    return {"is_completed": wizard.is_completed, "completed_at": wizard.completed_at.isoformat() if wizard.completed_at else None}
+@router.get("/session", response_model=OnboardingSessionResponse)
+async def get_session(
+    db: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+    company_id: UUID = Header(alias="X-Company-ID"),
+) -> Any:
+    """Gets the current session with dynamic progress and steps state."""
+    session = await crud_onboarding.get_session_by_company(db, company_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="No onboarding session found")
+    raise HTTPException(status_code=501, detail="Rule Engine Builder Pending (Sprint 2)")

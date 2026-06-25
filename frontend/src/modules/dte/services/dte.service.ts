@@ -23,9 +23,14 @@ export async function createDTE(payload: DTEIssuePayload): Promise<DTE> {
       dte_type: payload.dte_type,
       folio: Math.floor(Math.random() * 9000) + 1000,
       issue_date: payload.issue_date,
-      total_amount: String(payload.items.reduce((s, i) => s + i.quantity * i.unit_price, 0) * 1.19),
+      total_amount: String(Math.round(payload.items.reduce((s, i) => s + i.quantity * i.unit_price, 0) * 1.19)),
+      net_amount: String(Math.round(payload.items.reduce((s, i) => s + i.quantity * i.unit_price, 0))),
+      exempt_amount: "0",
+      tax_amount: String(Math.round(payload.items.reduce((s, i) => s + i.quantity * i.unit_price, 0) * 0.19)),
       status: "draft",
       sii_track_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     return newDTE;
   }
@@ -40,13 +45,13 @@ export async function generateDteXml(id: string): Promise<string> {
 }
 
 export async function sendDTE(id: string): Promise<DTEStatusResponse> {
-  if (isMockMode) { await delay(600); return { id, status: "sent", message: "Enviado al SII (mock)" }; }
+  if (isMockMode) { await delay(600); return { dte_id: id, status: "sent", provider: "mock", detail: "Enviado al SII (mock)" }; }
   const response = await apiClient.post<DTEStatusResponse>(`/dte/${id}/send`);
   return response.data;
 }
 
 export async function getDTEStatus(id: string): Promise<DTEStatusResponse> {
-  if (isMockMode) { await delay(); const dte = MOCK_DTES.find(d => d.id === id); return { id, status: dte?.status ?? "draft", message: "" }; }
+  if (isMockMode) { await delay(); const dte = MOCK_DTES.find(d => d.id === id); return { dte_id: id, status: dte?.status ?? "draft", provider: "mock" }; }
   const response = await apiClient.get<DTEStatusResponse>(`/dte/${id}/status`);
   return response.data;
 }

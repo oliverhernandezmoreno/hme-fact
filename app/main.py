@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="OhmEFACT — Plataforma SaaS Facturación Electrónica Chile",
+        title="hmEFact — Plataforma SaaS Facturación Electrónica Chile",
         description="API de facturación electrónica SaaS multiempresa con integración SII.",
         version="6.0.0",
         debug=settings.DEBUG,

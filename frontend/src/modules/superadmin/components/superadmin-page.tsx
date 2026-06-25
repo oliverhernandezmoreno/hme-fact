@@ -113,8 +113,8 @@ export function SuperAdminPage() {
                     <p className="text-xs text-muted-foreground">{c.rut} · {new Date(c.created_at).toLocaleDateString("es-CL")}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize text-xs">{c.plan}</Badge>
-                    <Badge variant={c.is_active ? "default" : "secondary"} className="text-xs">
+                    <Badge variant="info" className="capitalize text-xs">{c.plan}</Badge>
+                    <Badge variant={c.is_active ? "default" : "warning"} className="text-xs">
                       {c.is_active ? "Activa" : "Inactiva"}
                     </Badge>
                   </div>

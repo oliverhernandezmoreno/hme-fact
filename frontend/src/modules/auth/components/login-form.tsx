@@ -17,7 +17,7 @@ export function LoginForm() {
   const loginMutation = useLogin();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" }
+    defaultValues: { email: "admin@ohmefact.cl", password: "mockpassword123" }
   });
 
   return (

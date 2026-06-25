@@ -28,13 +28,13 @@ export default function SettingsPage() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4 text-primary" /> Datos de empresa
           </CardTitle>
-          <CardDescription>Información fiscal registrada en OhmEFACT</CardDescription>
+          <CardDescription>Información fiscal registrada en hmEFact</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div><label className="mb-1 block text-xs text-muted-foreground">RUT</label><Input value={activeCompany?.rut ?? ""} readOnly className="bg-muted/40" /></div>
           <div><label className="mb-1 block text-xs text-muted-foreground">Razón Social</label><Input value={activeCompany?.legal_name ?? ""} readOnly className="bg-muted/40" /></div>
           <div><label className="mb-1 block text-xs text-muted-foreground">Nombre Fantasía</label><Input value={activeCompany?.fantasy_name ?? ""} readOnly className="bg-muted/40" /></div>
-          <div><label className="mb-1 block text-xs text-muted-foreground">Email</label><Input value={activeCompany?.email ?? ""} readOnly className="bg-muted/40" /></div>
+
           <Button className="sm:col-span-2" onClick={() => toast.info("Edición de empresa — disponible con backend activo")}>Editar datos</Button>
         </CardContent>
       </Card>
@@ -71,7 +71,7 @@ export default function SettingsPage() {
       {/* Status modo mock */}
       {isMockMode && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <Badge variant="outline" className="border-amber-400 text-amber-700">MOCK MODE</Badge>
+          <Badge variant="warning" className="border-amber-400 text-amber-700">MOCK MODE</Badge>
           <span>El frontend está en modo mock. Conecta el backend para habilitar cambios persistentes.</span>
         </div>
       )}

@@ -14,7 +14,15 @@ from app.models.dte_status_history import DTEStatusHistory
 from app.models.dte_transmission import DTETransmission
 from app.models.dte_xml import DTEXml
 from app.models.enums import DTEEventType, DTEStatus, DTEType, DTEXmlType, UserRole
-from app.models.onboarding import OnboardingWizard
+from app.models.integration import (
+    ExternalMapping,
+    IdempotencyKey,
+    IntegrationConnection,
+    IntegrationEvent,
+    WebhookDelivery,
+    WebhookSubscription,
+)
+from app.models.onboarding import OnboardingSession, OnboardingStepDefinition, OnboardingStepStatus, OnboardingWorkflow, OnboardingEvent
 from app.models.product import Product
 from app.models.rbac import Permission, Role, RolePermission, UserRole as DynamicUserRole
 from app.models.saas_metrics import SaasMetricsSnapshot
@@ -41,8 +49,15 @@ __all__ = [
     "DTEType",
     "DTEXml",
     "DTEXmlType",
-    "DynamicUserRole",
-    "OnboardingWizard",
+    "ExternalMapping",
+    "IdempotencyKey",
+    "IntegrationConnection",
+    "IntegrationEvent",
+    "OnboardingSession",
+    "OnboardingStepDefinition",
+    "OnboardingStepStatus",
+    "OnboardingWorkflow",
+    "OnboardingEvent",
     "Permission",
     "Product",
     "Role",
@@ -54,4 +69,6 @@ __all__ = [
     "UsageMetric",
     "User",
     "UserRole",
+    "WebhookDelivery",
+    "WebhookSubscription",
 ]

@@ -1,4 +1,4 @@
-# Suscripciones y Planes — OhmEFACT Fase 6
+# Suscripciones y Planes — hmEFact Fase 6
 
 ## Planes Disponibles
 

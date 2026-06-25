@@ -173,14 +173,14 @@ export function APIKeysPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-medium text-sm">{key.name}</p>
-                      <Badge variant={key.is_active ? "default" : "secondary"} className="text-xs">
+                      <Badge variant={key.is_active ? "default" : "warning"} className="text-xs">
                         {key.is_active ? "Activa" : "Revocada"}
                       </Badge>
                     </div>
                     <code className="text-xs text-muted-foreground">{key.prefix}••••••••</code>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {key.scopes.map((s) => (
-                        <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>
+                        <Badge key={s} variant="info" className="text-[10px]">{s}</Badge>
                       ))}
                     </div>
                     <p className="mt-1 text-[10px] text-muted-foreground">

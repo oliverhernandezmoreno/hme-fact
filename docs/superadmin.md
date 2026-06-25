@@ -1,4 +1,4 @@
-# SuperAdmin Platform — OhmEFACT Fase 6
+# SuperAdmin Platform — hmEFact Fase 6
 
 ## Acceso
 

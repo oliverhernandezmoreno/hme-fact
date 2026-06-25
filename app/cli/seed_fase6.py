@@ -1,5 +1,5 @@
 """
-CLI commands for OhmEFACT platform seeding.
+CLI commands for hmEFact platform seeding.
 Usage:
     python -m app.cli.seed_fase6
 """
@@ -139,7 +139,7 @@ async def seed_plans_and_roles() -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     asyncio.run(seed_plans_and_roles())
-    print("\n🎉 OhmEFACT Fase 6 seed completed successfully!")
+    print("\n🎉 hmEFact Fase 6 seed completed successfully!")
     print("   Plans: Starter, PyME, Business, Enterprise")
     print("   Roles: SuperAdmin, CompanyOwner, Accountant, Seller, Viewer, APIUser")
 

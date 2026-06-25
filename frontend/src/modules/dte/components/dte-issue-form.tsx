@@ -69,7 +69,10 @@ export function DTEIssueForm({ dteType = 33 }: { dteType?: 33 | 39 | 61 }) {
             </Select>
           </FormField>
           <FormField label="Cliente" error={form.formState.errors.customer_id}>
-            <Select onValueChange={(value) => form.setValue("customer_id", value)}>
+            <Select 
+              value={form.watch("customer_id")} 
+              onValueChange={(value) => form.setValue("customer_id", value, { shouldValidate: true })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar cliente" />
               </SelectTrigger>
@@ -104,7 +107,10 @@ export function DTEIssueForm({ dteType = 33 }: { dteType?: 33 | 39 | 61 }) {
         <CardContent className="space-y-4">
           {itemArray.fields.map((field, index) => (
             <div key={field.id} className="grid gap-3 rounded-lg border p-3 lg:grid-cols-[1.3fr_1.5fr_.7fr_.9fr_.5fr_auto]">
-              <Select onValueChange={(value) => applyProduct(index, value)}>
+              <Select 
+                value={form.watch(`items.${index}.product_id`)} 
+                onValueChange={(value) => applyProduct(index, value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Producto" />
                 </SelectTrigger>

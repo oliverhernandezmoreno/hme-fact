@@ -25,7 +25,7 @@ class SubscriptionPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     features: Mapped["SubscriptionFeature"] = relationship("SubscriptionFeature", back_populates="plan", uselist=False)
-    subscriptions: Mapped[list["Subscription"]] = relationship("Subscription", back_populates="plan")
+    subscriptions: Mapped[list["Subscription"]] = relationship("Subscription", back_populates="plan", foreign_keys="[Subscription.plan_id]")
 
 
 class SubscriptionFeature(UUIDPrimaryKeyMixin, TimestampMixin, Base):

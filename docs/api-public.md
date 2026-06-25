@@ -1,4 +1,4 @@
-# API Pública — OhmEFACT Fase 6
+# API Pública — hmEFact Fase 6
 
 ## Autenticación
 

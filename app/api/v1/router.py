@@ -14,6 +14,10 @@ from app.api.v1.endpoints import (
     api_keys,
     rbac,
     onboarding,
+    integrations,
+    inbound_webhooks,
+    certificates,
+    caf,
     superadmin,
 )
 
@@ -30,4 +34,10 @@ api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["
 api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api_keys"])
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
+api_router.include_router(caf.router, prefix="/caf", tags=["caf"])
 api_router.include_router(superadmin.router, prefix="/superadmin", tags=["superadmin"])
+# Fase 7 - Integrations
+api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
+api_router.include_router(inbound_webhooks.router, prefix="/webhooks/inbound", tags=["webhooks"])
+# Fase 8 - Firma Digital (Certificados)
+api_router.include_router(certificates.router, prefix="/certificates", tags=["certificates"])

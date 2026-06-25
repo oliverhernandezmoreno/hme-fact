@@ -12,11 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency } from "@/lib/utils";
 import { getBillingEvents, getMySubscription, getPlans, getUsage } from "@/modules/billing/services/subscription.service";
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const STATUS_LABELS: Record<string, { label: string; variant: "default" | "warning" | "danger" | "info" }> = {
   active: { label: "Activa", variant: "default" },
-  trial: { label: "Prueba", variant: "secondary" },
-  suspended: { label: "Suspendida", variant: "destructive" },
-  cancelled: { label: "Cancelada", variant: "destructive" },
+  trial: { label: "Prueba", variant: "warning" },
+  suspended: { label: "Suspendida", variant: "danger" },
+  cancelled: { label: "Cancelada", variant: "danger" },
 };
 
 function UsageBar({ used, limit, label }: { used: number; limit: number; label: string }) {
@@ -53,7 +53,7 @@ export function SubscriptionPage() {
     queryFn: getBillingEvents,
   });
 
-  const statusInfo = subscription ? (STATUS_LABELS[subscription.status] ?? { label: subscription.status, variant: "outline" as const }) : null;
+  const statusInfo = subscription ? (STATUS_LABELS[subscription.status] ?? { label: subscription.status, variant: "info" as const }) : null;
 
   return (
     <div className="space-y-6">
@@ -147,7 +147,7 @@ export function SubscriptionPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">{e.amount > 0 ? formatCurrency(e.amount) : "—"}</p>
-                    <Badge variant="outline" className="text-[10px]">{e.event_type}</Badge>
+                    <Badge variant="info" className="text-[10px]">{e.event_type}</Badge>
                   </div>
                 </div>
               ))}
