@@ -14,8 +14,10 @@ from app.models.dte_status_history import DTEStatusHistory
 from app.models.dte_transmission import DTETransmission
 from app.models.dte_xml import DTEXml
 from app.models.enums import DTEEventType, DTEStatus, DTEType, DTEXmlType, UserRole
+from app.models.onboarding import OnboardingWizard
 from app.models.product import Product
 from app.models.rbac import Permission, Role, RolePermission, UserRole as DynamicUserRole
+from app.models.saas_metrics import SaasMetricsSnapshot
 from app.models.user import User
 
 __all__ = [
@@ -40,10 +42,12 @@ __all__ = [
     "DTEXml",
     "DTEXmlType",
     "DynamicUserRole",
+    "OnboardingWizard",
     "Permission",
     "Product",
     "Role",
     "RolePermission",
+    "SaasMetricsSnapshot",
     "Subscription",
     "SubscriptionFeature",
     "SubscriptionPlan",

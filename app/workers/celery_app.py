@@ -12,7 +12,10 @@ celery_app = Celery(
     "hme_fact",
     broker=str(settings.CELERY_BROKER_URL),
     backend=str(settings.CELERY_RESULT_BACKEND),
-    include=["app.workers.tasks.dte_tasks"],
+    include=[
+        "app.workers.tasks.dte_tasks",
+        "app.workers.tasks.billing_tasks",  # Fase 6
+    ],
 )
 
 celery_app.conf.update(

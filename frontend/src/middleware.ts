@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedRoutes = ["/dashboard", "/companies", "/customers", "/products", "/dte", "/settings"];
+const protectedRoutes = ["/dashboard", "/companies", "/customers", "/products", "/dte", "/settings", "/subscription", "/api-keys", "/onboarding", "/superadmin"];
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get(process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME ?? "hme_fact_token");

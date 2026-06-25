@@ -15,8 +15,10 @@ class Role(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(String(255))
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    scope: Mapped[str] = mapped_column(String(20), default="company", nullable=False)  # platform | company
     
     permissions: Mapped[list["RolePermission"]] = relationship("RolePermission", back_populates="role", cascade="all, delete-orphan")
+    user_roles: Mapped[list["UserRole"]] = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
 
 
 class Permission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -46,11 +48,11 @@ class RolePermission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 class UserRole(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "user_roles"
     __table_args__ = (
-        UniqueConstraint('user_id', 'role_id', 'company_id', name='uix_user_role_company'),
+        UniqueConstraint("user_id", "role_id", "company_id", name="uix_user_role_company"),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     role_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"))
     company_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
 
-    role: Mapped["Role"] = relationship("Role")
+    role: Mapped["Role"] = relationship("Role", back_populates="user_roles")

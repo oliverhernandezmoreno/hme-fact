@@ -3,9 +3,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
@@ -14,12 +14,17 @@ class APIKey(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "api_keys"
 
     company_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     prefix: Mapped[str] = mapped_column(String(10), nullable=False)
     hashed_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     scopes: Mapped[list[str]] = mapped_column(JSONB, default=list)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    created_by: Mapped["User | None"] = relationship("User", foreign_keys=[created_by_user_id])
 
 
 class APIUsageLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -32,3 +37,4 @@ class APIUsageLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status_code: Mapped[int] = mapped_column(Integer, nullable=False)
     ip_address: Mapped[str | None] = mapped_column(String(45))
     processing_time_ms: Mapped[int] = mapped_column(Integer, default=0)
+    user_agent: Mapped[str | None] = mapped_column(String(512))
