@@ -30,41 +30,37 @@ alembic/            Migraciones
 
 ## Levantar localmente
 
-1. Copia variables de entorno:
+### Opción A — Docker Compose (todo containerizado)
 
 ```bash
 cp .env.example .env
+docker-compose up --build -d
+docker-compose exec backend alembic upgrade head
+docker-compose exec backend python -m app.cli.create_superuser
+docker-compose exec backend python -m app.cli.seed_fase6
 ```
 
-2. Construye y levanta servicios:
+### Opción B — Desarrollo local (sin Docker para backend/frontend)
 
 ```bash
-docker compose up --build
+sudo bash scripts/setup_local.sh   # PostgreSQL + Redis + grupo docker
+cp .env.example .env                # Ajustar hosts a 127.0.0.1
+source .venv/bin/activate
+alembic upgrade head
+python -m app.cli.create_superuser
+python -m app.cli.seed_fase6
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# En otra terminal:
+cd frontend && npm run dev
 ```
 
-Para usar tu archivo `.env` con Docker Compose:
+> 📘 **Guía completa con troubleshooting:** [docs/local-setup.md](docs/local-setup.md)
 
-```bash
-APP_ENV_FILE=.env docker compose up --build
-```
+### Endpoints principales
 
-3. Aplica migraciones en otra terminal:
-
-```bash
-docker compose exec backend alembic upgrade head
-```
-
-4. Crea el primer usuario:
-
-```bash
-docker compose exec backend python -m app.cli.create_superuser
-```
-
-5. Abre la documentacion:
-
-```text
-http://localhost:8000/docs
-```
+- **Health:** http://localhost:8000/health
+- **Swagger UI:** http://localhost:8000/docs
+- **Frontend:** http://localhost:3000
 
 ## Autenticacion
 
