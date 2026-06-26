@@ -3,7 +3,7 @@ import { z } from "zod";
 const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().default("http://localhost:8000/api/v1"),
   NEXT_PUBLIC_APP_NAME: z.string().default("hmEFact"),
-  NEXT_PUBLIC_AUTH_COOKIE_NAME: z.string().default("ohmefact_token"),
+  NEXT_PUBLIC_AUTH_COOKIE_NAME: z.string().default("hme_fact_token"),
   NEXT_PUBLIC_USE_MOCKS: z.coerce.boolean().default(false),
   NEXT_PUBLIC_ENABLE_POS: z.coerce.boolean().default(false),
   NEXT_PUBLIC_ENABLE_INVENTORY: z.coerce.boolean().default(false),

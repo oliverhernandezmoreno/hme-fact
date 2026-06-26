@@ -64,8 +64,28 @@ echo -e "${YELLOW}[3/4] Verificando Redis...${NC}"
 if command -v redis-server &> /dev/null; then
     echo -e "${GREEN}  ✓ Redis ya está instalado${NC}"
 else
-    apt-get update -qq && apt-get install -y -qq redis-server
-    echo -e "${GREEN}  ✓ Redis instalado${NC}"
+    # Temporarily disable third-party repos that may have GPG issues (e.g. Cursor)
+    DISABLED_REPOS=()
+    for f in /etc/apt/sources.list.d/*.list; do
+        if [ -f "$f" ] && grep -qvE '(ubuntu|debian)' "$f" 2>/dev/null; then
+            mv "$f" "${f}.bak_hmefact" 2>/dev/null && DISABLED_REPOS+=("$f")
+        fi
+    done
+
+    apt-get update -qq 2>/dev/null
+    apt-get install -y -qq redis-server 2>/dev/null
+
+    # Restore disabled repos
+    for f in "${DISABLED_REPOS[@]}"; do
+        mv "${f}.bak_hmefact" "$f" 2>/dev/null
+    done
+
+    if command -v redis-server &> /dev/null; then
+        echo -e "${GREEN}  ✓ Redis instalado${NC}"
+    else
+        echo -e "${RED}  ✗ Error instalando Redis. Intenta manualmente:${NC}"
+        echo -e "${RED}    sudo apt-get install -y redis-server${NC}"
+    fi
 fi
 
 # Start Redis if not running

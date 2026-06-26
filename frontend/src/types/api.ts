@@ -21,7 +21,8 @@ export type DTEStatus =
   | "accepted"
   | "partially_accepted"
   | "rejected"
-  | "error";
+  | "error"
+  | "contingency";
 
 export type PaginatedState = {
   pageIndex: number;

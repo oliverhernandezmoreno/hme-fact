@@ -19,6 +19,7 @@ from app.api.v1.endpoints import (
     certificates,
     caf,
     superadmin,
+    sii_admin,
 )
 
 api_router = APIRouter()
@@ -36,6 +37,7 @@ api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 api_router.include_router(caf.router, prefix="/caf", tags=["caf"])
 api_router.include_router(superadmin.router, prefix="/superadmin", tags=["superadmin"])
+api_router.include_router(sii_admin.router, prefix="/admin/sii", tags=["admin_sii"])
 # Fase 7 - Integrations
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
 api_router.include_router(inbound_webhooks.router, prefix="/webhooks/inbound", tags=["webhooks"])

@@ -65,6 +65,9 @@ class SIISigner:
         Applies XML-DSig to an lxml Element using the provided private key and certificate.
         Automatically injects the <Signature> node required by SII.
         """
+        # Register ID attribute so xmlsec can resolve URI references like #DOC_1
+        xmlsec.tree.add_ids(xml_element, ["ID"])
+
         # Create Signature Template
         signature_node = xmlsec.template.create(
             xml_element,
@@ -102,3 +105,42 @@ class SIISigner:
         ctx.sign(signature_node)
         
         return xml_element
+
+    def sign_dte(
+        self,
+        xml_tree: etree._Element,
+        pfx_data: bytes,
+        pfx_password: str,
+        doc_id: str
+    ) -> bytes:
+        """
+        Signs the DTE XML structure using XML-DSig and returns the signed XML as bytes.
+        """
+        private_key_pem, cert_pem = self.extract_pem_from_pfx(pfx_data, pfx_password)
+        signed_element = self.sign_xml_dsig(
+            xml_element=xml_tree,
+            private_key_pem=private_key_pem,
+            cert_pem=cert_pem,
+            reference_uri=f"#{doc_id}"
+        )
+        return etree.tostring(signed_element, xml_declaration=True, encoding="ISO-8859-1")
+
+    def sign_token_seed(
+        self,
+        xml_to_sign: str,
+        pfx_data: bytes,
+        pfx_password: str
+    ) -> str:
+        """
+        Signs the <getToken> XML containing the seed from the SII.
+        Returns the signed XML string.
+        """
+        private_key_pem, cert_pem = self.extract_pem_from_pfx(pfx_data, pfx_password)
+        xml_element = etree.fromstring(xml_to_sign.encode("utf-8"))
+        signed_element = self.sign_xml_dsig(
+            xml_element=xml_element,
+            private_key_pem=private_key_pem,
+            cert_pem=cert_pem,
+            reference_uri=""
+        )
+        return etree.tostring(signed_element, encoding="utf-8").decode("utf-8")

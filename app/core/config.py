@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     SIMPLEAPI_TIMEOUT: float = 30.0
     TAX_PROVIDER_MAX_RETRIES: int = 3
     TAX_PROVIDER_BACKOFF_BASE_SECONDS: float = 0.5
+    SII_CB_FAILURE_THRESHOLD: int = 5
+    SII_CB_RECOVERY_TIMEOUT: int = 60
+    SII_SIMULATE_FAILURE: bool = False
 
     CELERY_BROKER_URL: RedisDsn | str = "redis://redis:6379/2"
     CELERY_RESULT_BACKEND: RedisDsn | str = "redis://redis:6379/2"

@@ -96,9 +96,16 @@ class DTEBuilder:
             
             # The CAF part
             if 'caf_xml' in dte_data:
-                # Append raw CAF XML element into DD
+                # Append raw CAF XML element into DD (extract CAF if embedded in AUTORIZACION)
                 caf_element = etree.fromstring(dte_data['caf_xml'])
-                dd.append(caf_element)
+                if caf_element.tag == "AUTORIZACION":
+                    caf_node = caf_element.find("CAF")
+                    if caf_node is not None:
+                        dd.append(caf_node)
+                    else:
+                        dd.append(caf_element)
+                else:
+                    dd.append(caf_element)
                 
             DTEBuilder._create_element(dd, "TSTED", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
             

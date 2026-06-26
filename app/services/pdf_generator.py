@@ -20,7 +20,7 @@ class PDFGenerator:
         Generates the PDF417 barcode image for the TED and returns it as a temporary file path.
         """
         # TED string must be ISO-8859-1 as per SII specification
-        codes = encode(ted_xml_string, security_level=5)
+        codes = encode(ted_xml_string, columns=10, security_level=5)
         # Render barcode as an image
         image = render_image(codes, scale=2, padding=10)
         

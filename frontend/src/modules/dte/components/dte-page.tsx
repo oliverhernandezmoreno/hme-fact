@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { FileText, RefreshCw, Send } from "lucide-react";
+import { FileText, RefreshCw, Send, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
 import { DataTable } from "@/components/data-table/data-table";
@@ -21,6 +21,9 @@ export function DTEPage() {
   const { data = [], isLoading } = useDTEList();
   const { send, refreshStatus } = useDTEMutations();
 
+  const contingencyDtes = data.filter((d) => d.status === "contingency");
+  const hasContingency = contingencyDtes.length > 0;
+
   const columns: ColumnDef<DTE>[] = [
     { accessorKey: "folio", header: "Folio" },
     { accessorKey: "dte_type", header: "Tipo" },
@@ -30,16 +33,27 @@ export function DTEPage() {
     {
       id: "actions",
       header: "Acciones",
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => send.mutate(row.original.id)}>
-            <Send className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => refreshStatus.mutate(row.original.id)}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+      cell: ({ row }) => {
+        const dte = row.original;
+        const isContingency = dte.status === "contingency";
+        return (
+          <div className="flex gap-2">
+            <Button
+              variant={isContingency ? "default" : "outline"}
+              size="sm"
+              onClick={() => send.mutate(dte.id)}
+              className={isContingency ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
+              title={isContingency ? "Reintentar Envío a SII" : "Enviar a SII"}
+            >
+              <Send className="h-4 w-4" />
+              {isContingency && <span className="ml-1 text-xs">Reintentar</span>}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => refreshStatus.mutate(dte.id)}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
     }
   ];
 
@@ -65,10 +79,27 @@ export function DTEPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {hasContingency && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-amber-800 dark:text-amber-300">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-sm">Documentos en Contingencia</h4>
+              <p className="text-xs text-amber-700/90 dark:text-amber-400/90 mt-0.5">
+                Hay {contingencyDtes.length} documento{contingencyDtes.length > 1 ? "s" : ""} en estado de contingencia. 
+                Se han firmado digitalmente de forma exitosa y son válidos fiscalmente, pero no se pudieron transmitir debido a caídas externas en los servidores del SII. 
+                Los reintentos programados del sistema los enviarán de forma automática, o bien puedes forzar la transmisión presionando <strong>Reintentar</strong> en la lista de acciones.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Estado tributario</CardTitle>
-          <CardDescription>Estados normalizados: draft, generated, sent, accepted, rejected, error.</CardDescription>
+          <CardDescription>Estados normalizados: draft, generated, sent, accepted, rejected, error, contingency.</CardDescription>
         </CardHeader>
         <CardContent>
           {!data.length && !isLoading ? (

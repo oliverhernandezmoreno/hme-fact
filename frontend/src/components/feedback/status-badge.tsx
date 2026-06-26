@@ -9,7 +9,8 @@ const statusLabels: Record<DTEStatus, string> = {
   accepted: "Aceptado",
   partially_accepted: "Aceptado con reparos",
   rejected: "Rechazado",
-  error: "Error"
+  error: "Error",
+  contingency: "Contingencia"
 };
 
 const statusVariants: Record<DTEStatus, "default" | "success" | "warning" | "danger" | "info"> = {
@@ -20,7 +21,8 @@ const statusVariants: Record<DTEStatus, "default" | "success" | "warning" | "dan
   accepted: "success",
   partially_accepted: "warning",
   rejected: "danger",
-  error: "danger"
+  error: "danger",
+  contingency: "warning"
 };
 
 export function StatusBadge({ status }: { status: DTEStatus }) {

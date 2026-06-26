@@ -16,6 +16,10 @@ class BaseFileStorageService(ABC):
         pass
 
     @abstractmethod
+    def get_file_stream(self, path: str, chunk_size: int = 65536):
+        pass
+
+    @abstractmethod
     async def delete_file(self, path: str) -> None:
         pass
 
@@ -43,6 +47,20 @@ class LocalFileStorageService(BaseFileStorageService):
             raise FileNotFoundError(f"File not found: {path}")
         with open(full_path, "rb") as f:
             return f.read()
+
+    def get_file_stream(self, path: str, chunk_size: int = 65536):
+        full_path = self._get_full_path(path)
+        if not os.path.exists(full_path):
+            raise FileNotFoundError(f"File not found: {path}")
+        
+        def iter_file():
+            with open(full_path, "rb") as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+        return iter_file()
 
     async def delete_file(self, path: str) -> None:
         full_path = self._get_full_path(path)

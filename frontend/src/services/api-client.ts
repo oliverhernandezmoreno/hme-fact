@@ -23,6 +23,7 @@ function normalizeError(error: AxiosError): ApiError {
 export const apiClient: AxiosInstance = axios.create({
   baseURL: env.NEXT_PUBLIC_API_URL,
   timeout: 30_000,
+  withCredentials: true,
   headers: {
     Accept: "application/json"
   }

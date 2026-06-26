@@ -8,11 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import DTE, DTEStatus, DTEEventType
-from app.modules.integrations.providers.simpleapi import SimpleAPITaxProvider
 from app.modules.integrations.services import TaxIntegrationService
 from app.modules.notifications.services.email_service import EmailService
 from app.modules.pdf.services.pdf_generator import PdfGeneratorService
-from app.modules.xml.validators.dte_validator import DTEXmlValidator
 from app.services.audit import AuditLogService
 from app.workers.celery_app import celery_app
 from app.workers.utils.async_runner import async_task
@@ -22,9 +20,7 @@ logger = logging.getLogger(__name__)
 
 def get_tax_integration_service(session: AsyncSession) -> TaxIntegrationService:
     # Factory for Celery usage
-    provider = SimpleAPITaxProvider()
-    validator = DTEXmlValidator()
-    return TaxIntegrationService(session=session, provider=provider, xml_validator=validator)
+    return TaxIntegrationService(session=session)
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -149,14 +145,22 @@ async def send_dte_email_task(self: Any, dte_id: str, company_id: str, to_email:
 async def retry_failed_dtes_task(session: AsyncSession) -> None:
     logger.info("Running scheduled task: retry_failed_dtes_task")
     try:
-        from sqlalchemy import select
-        # Example: Retry DTES that are queued or have errors that we can retry
+        # Retry DTEs in ERROR or CONTINGENCY status
+        from sqlalchemy import or_
         result = await session.execute(
-            select(DTE).where(DTE.status == DTEStatus.ERROR)
+            select(DTE).where(
+                or_(
+                    DTE.status == DTEStatus.ERROR,
+                    DTE.status == DTEStatus.CONTINGENCY
+                )
+            )
         )
         dtes = result.scalars().all()
         for dte in dtes:
-            # Re-queue
-            send_dte_task.delay(str(dte.id), str(dte.company_id))
+            if dte.sii_xml:
+                from app.workers.tasks.dte_emission import emit_dte_task
+                emit_dte_task.delay(str(dte.id))
+            else:
+                send_dte_task.delay(str(dte.id), str(dte.company_id))
     except Exception as exc:
         logger.error("Error in retry_failed_dtes_task", exc_info=exc)

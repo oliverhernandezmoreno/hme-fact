@@ -25,4 +25,12 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.tasks.billing_tasks.send_quota_warning_emails",
         "schedule": crontab(minute="0", hour="8"),  # Daily at 08:00 UTC
     },
+    "check-expiring-certificates-daily": {
+        "task": "app.workers.tasks.alert_tasks.check_expiring_certificates_task",
+        "schedule": crontab(minute="0", hour="4"),  # Daily at 04:00 UTC
+    },
+    "check-depleted-cafs-daily": {
+        "task": "app.workers.tasks.alert_tasks.check_depleted_cafs_task",
+        "schedule": crontab(minute="30", hour="4"),  # Daily at 04:30 UTC
+    },
 }

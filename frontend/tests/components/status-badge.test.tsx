@@ -8,4 +8,9 @@ describe("StatusBadge", () => {
     render(<StatusBadge status="accepted" />);
     expect(screen.getByText("Aceptado")).toBeInTheDocument();
   });
+
+  it("renders contingency state label", () => {
+    render(<StatusBadge status="contingency" />);
+    expect(screen.getByText("Contingencia")).toBeInTheDocument();
+  });
 });

@@ -4,7 +4,7 @@ import asyncio
 from functools import wraps
 from typing import Any, Callable, Coroutine
 
-from app.db.session import async_session_maker
+from app.db.session import AsyncSessionLocal
 
 
 def async_task(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Any]:
@@ -12,7 +12,7 @@ def async_task(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., A
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         async def run_with_session() -> Any:
-            async with async_session_maker() as session:
+            async with AsyncSessionLocal() as session:
                 kwargs["session"] = session
                 return await func(*args, **kwargs)
 

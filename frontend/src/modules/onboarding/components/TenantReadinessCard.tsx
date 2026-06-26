@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useOnboardingStore } from "../../stores/useOnboardingStore";
+import { useOnboardingStore } from "../stores/useOnboardingStore";
 import { AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export function TenantReadinessCard() {

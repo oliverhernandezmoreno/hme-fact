@@ -16,7 +16,10 @@ export function useCompanies() {
     queryKey: queryKeys.companies,
     queryFn: async () => {
       const companies = await listCompanies();
-      if (!activeCompany && companies[0]) setActiveCompany(companies[0]);
+      const exists = companies.some((c) => c.id === activeCompany?.id);
+      if ((!activeCompany || !exists) && companies[0]) {
+        setActiveCompany(companies[0]);
+      }
       return companies;
     }
   });

@@ -24,6 +24,7 @@ class DTEStatus(str, enum.Enum):
     CANCELLED = "cancelled"
     PDF_GENERATED = "pdf_generated"
     EMAILED = "emailed"
+    CONTINGENCY = "contingency"
 
 
 class DTEEventType(str, enum.Enum):
@@ -39,6 +40,7 @@ class DTEEventType(str, enum.Enum):
     CANCELLED = "cancelled"
     PDF_GENERATED = "pdf_generated"
     EMAILED = "emailed"
+    SII_CONTINGENCY = "sii_contingency"
 
 
 class DTEXmlType(str, enum.Enum):

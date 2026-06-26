@@ -1,7 +1,7 @@
 """fase6_saas_platform
 
 Revision ID: 20260624_0006
-Revises: 20260620_0005_phase5_updates
+Revises: 20260620_0005
 Create Date: 2026-06-24
 
 Fase 6 changes:
@@ -19,112 +19,132 @@ Fase 6 changes:
 from __future__ import annotations
 
 import sqlalchemy as sa
+from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
 # revision identifiers
 revision = "20260624_0006"
-down_revision = "20260620_0005_phase5_updates"
+down_revision = "20260620_0005"
 branch_labels = None
 depends_on = None
 
 
+def _has_column(inspector, table: str, column: str) -> bool:
+    """Check if a column already exists in a table."""
+    return column in [c["name"] for c in inspector.get_columns(table)]
+
+
+def _add_column_safe(inspector, table: str, column: sa.Column) -> None:
+    """Add a column only if it doesn't already exist."""
+    if not _has_column(inspector, table, column.name):
+        op.add_column(table, column)
+
+
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    tables = inspector.get_table_names()
+
     # ── subscription_plans ────────────────────────────────────────────────
-    op.add_column("subscription_plans", sa.Column("description", sa.Text(), nullable=True))
-    op.add_column("subscription_plans", sa.Column("trial_days", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("subscription_plans", sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("subscription_plans", sa.Column("is_public", sa.Boolean(), nullable=False, server_default="true"))
+    _add_column_safe(inspector, "subscription_plans", sa.Column("description", sa.Text(), nullable=True))
+    _add_column_safe(inspector, "subscription_plans", sa.Column("trial_days", sa.Integer(), nullable=False, server_default="0"))
+    _add_column_safe(inspector, "subscription_plans", sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"))
+    _add_column_safe(inspector, "subscription_plans", sa.Column("is_public", sa.Boolean(), nullable=False, server_default="true"))
 
     # ── subscription_features ─────────────────────────────────────────────
-    op.add_column("subscription_features", sa.Column("api_rate_limit_per_min", sa.Integer(), nullable=False, server_default="60"))
-    op.add_column("subscription_features", sa.Column("support_level", sa.String(50), nullable=False, server_default="'community'"))
+    _add_column_safe(inspector, "subscription_features", sa.Column("api_rate_limit_per_min", sa.Integer(), nullable=False, server_default="60"))
+    _add_column_safe(inspector, "subscription_features", sa.Column("support_level", sa.String(50), nullable=False, server_default="'community'"))
 
     # ── subscriptions ─────────────────────────────────────────────────────
-    op.add_column("subscriptions", sa.Column("trial_end", sa.DateTime(timezone=True), nullable=True))
-    op.add_column("subscriptions", sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True))
-    op.add_column(
-        "subscriptions",
-        sa.Column(
-            "upgraded_from_plan_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("subscription_plans.id", ondelete="SET NULL"),
-            nullable=True,
-        ),
-    )
+    _add_column_safe(inspector, "subscriptions", sa.Column("trial_end", sa.DateTime(timezone=True), nullable=True))
+    _add_column_safe(inspector, "subscriptions", sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True))
+    if not _has_column(inspector, "subscriptions", "upgraded_from_plan_id"):
+        op.add_column(
+            "subscriptions",
+            sa.Column(
+                "upgraded_from_plan_id",
+                postgresql.UUID(as_uuid=True),
+                sa.ForeignKey("subscription_plans.id", ondelete="SET NULL"),
+                nullable=True,
+            ),
+        )
     # Update status values
     op.execute("UPDATE subscriptions SET status = 'active' WHERE status NOT IN ('active', 'trial', 'suspended', 'cancelled', 'expired')")
 
     # ── billing_events ────────────────────────────────────────────────────
-    op.add_column("billing_events", sa.Column("description", sa.Text(), nullable=True))
-    op.add_column("billing_events", sa.Column("metadata", postgresql.JSONB(), nullable=True))
+    _add_column_safe(inspector, "billing_events", sa.Column("description", sa.Text(), nullable=True))
+    _add_column_safe(inspector, "billing_events", sa.Column("metadata", postgresql.JSONB(), nullable=True))
 
     # ── api_keys ──────────────────────────────────────────────────────────
-    op.add_column(
-        "api_keys",
-        sa.Column(
-            "created_by_user_id",
-            postgresql.UUID(as_uuid=True),
-            sa.ForeignKey("users.id", ondelete="SET NULL"),
-            nullable=True,
-        ),
-    )
-    op.add_column("api_keys", sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True))
-    op.add_column("api_keys", sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"))
+    if not _has_column(inspector, "api_keys", "created_by_user_id"):
+        op.add_column(
+            "api_keys",
+            sa.Column(
+                "created_by_user_id",
+                postgresql.UUID(as_uuid=True),
+                sa.ForeignKey("users.id", ondelete="SET NULL"),
+                nullable=True,
+            ),
+        )
+    _add_column_safe(inspector, "api_keys", sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True))
+    _add_column_safe(inspector, "api_keys", sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"))
 
     # ── api_usage_logs ────────────────────────────────────────────────────
-    op.add_column("api_usage_logs", sa.Column("user_agent", sa.String(512), nullable=True))
+    _add_column_safe(inspector, "api_usage_logs", sa.Column("user_agent", sa.String(512), nullable=True))
 
     # ── roles ─────────────────────────────────────────────────────────────
-    op.add_column("roles", sa.Column("scope", sa.String(20), nullable=False, server_default="'company'"))
+    _add_column_safe(inspector, "roles", sa.Column("scope", sa.String(20), nullable=False, server_default="'company'"))
 
     # ── users ─────────────────────────────────────────────────────────────
-    op.add_column("users", sa.Column("mfa_enabled", sa.Boolean(), nullable=False, server_default="false"))
-    op.add_column("users", sa.Column("mfa_secret", sa.String(255), nullable=True))
-    op.add_column("users", sa.Column("mfa_backup_codes", postgresql.JSONB(), nullable=True))
+    _add_column_safe(inspector, "users", sa.Column("mfa_enabled", sa.Boolean(), nullable=False, server_default="false"))
+    _add_column_safe(inspector, "users", sa.Column("mfa_secret", sa.String(255), nullable=True))
+    _add_column_safe(inspector, "users", sa.Column("mfa_backup_codes", postgresql.JSONB(), nullable=True))
 
     # ── onboarding_wizards (NEW TABLE) ────────────────────────────────────
-    op.create_table(
-        "onboarding_wizards",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("company_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, unique=True),
-        sa.Column("current_step", sa.Integer(), nullable=False, server_default="1"),
-        sa.Column("total_steps", sa.Integer(), nullable=False, server_default="8"),
-        sa.Column("completed_steps", postgresql.JSONB(), nullable=False, server_default="'[]'"),
-        sa.Column("step_data", postgresql.JSONB(), nullable=False, server_default="'{}'"),
-        sa.Column("skipped_steps", postgresql.JSONB(), nullable=False, server_default="'[]'"),
-        sa.Column("is_completed", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-    )
+    if "onboarding_wizards" not in tables:
+        op.create_table(
+            "onboarding_wizards",
+            sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+            sa.Column("company_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, unique=True),
+            sa.Column("current_step", sa.Integer(), nullable=False, server_default="1"),
+            sa.Column("total_steps", sa.Integer(), nullable=False, server_default="8"),
+            sa.Column("completed_steps", postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'")),
+            sa.Column("step_data", postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'")),
+            sa.Column("skipped_steps", postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'")),
+            sa.Column("is_completed", sa.Boolean(), nullable=False, server_default="false"),
+            sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
+            sa.Column("notes", sa.Text(), nullable=True),
+            sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+            sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        )
 
     # ── saas_metrics_snapshots (NEW TABLE) ────────────────────────────────
-    op.create_table(
-        "saas_metrics_snapshots",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("snapshot_date", sa.Date(), nullable=False, unique=True),
-        sa.Column("period_label", sa.String(20), nullable=False),
-        sa.Column("mrr", sa.Numeric(14, 2), nullable=False, server_default="0"),
-        sa.Column("arr", sa.Numeric(14, 2), nullable=False, server_default="0"),
-        sa.Column("active_companies", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("trial_companies", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("suspended_companies", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("new_companies_this_month", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("churned_companies_this_month", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("total_users", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("active_users_30d", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("dtes_this_month", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("api_calls_this_month", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("churn_rate_pct", sa.Numeric(6, 4), nullable=False, server_default="0"),
-        sa.Column("growth_rate_pct", sa.Numeric(6, 4), nullable=False, server_default="0"),
-        sa.Column("plan_distribution", postgresql.JSONB(), nullable=False, server_default="'{}'"),
-        sa.Column("extra", postgresql.JSONB(), nullable=False, server_default="'{}'"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-    )
+    if "saas_metrics_snapshots" not in tables:
+        op.create_table(
+            "saas_metrics_snapshots",
+            sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+            sa.Column("snapshot_date", sa.Date(), nullable=False, unique=True),
+            sa.Column("period_label", sa.String(20), nullable=False),
+            sa.Column("mrr", sa.Numeric(14, 2), nullable=False, server_default="0"),
+            sa.Column("arr", sa.Numeric(14, 2), nullable=False, server_default="0"),
+            sa.Column("active_companies", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("trial_companies", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("suspended_companies", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("new_companies_this_month", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("churned_companies_this_month", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("total_users", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("active_users_30d", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("dtes_this_month", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("api_calls_this_month", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("churn_rate_pct", sa.Numeric(6, 4), nullable=False, server_default="0"),
+            sa.Column("growth_rate_pct", sa.Numeric(6, 4), nullable=False, server_default="0"),
+            sa.Column("plan_distribution", postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'")),
+            sa.Column("extra", postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'")),
+            sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+            sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
+        )
 
 
 def downgrade() -> None:

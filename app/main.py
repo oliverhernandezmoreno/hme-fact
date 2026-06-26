@@ -14,6 +14,7 @@ from app.core.logging import configure_logging
 from app.core.middleware.api_key_middleware import APIKeyMiddleware
 from app.core.middleware.quota_middleware import QuotaMiddleware
 from app.core.middleware.rate_limit_middleware import RateLimitMiddleware
+from app.core.middleware.idempotency_middleware import IdempotencyMiddleware
 
 
 @asynccontextmanager
@@ -33,7 +34,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # ── CORS ────────────────────────────────────────────────────────────────
+    # ── CORS configuration ──────────────────────────────────────────────────
     if settings.BACKEND_CORS_ORIGINS:
         app.add_middleware(
             CORSMiddleware,
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
 
     # ── Middleware (order matters: last added = first executed) ─────────────
     app.add_middleware(QuotaMiddleware)       # Blocks DTE emission if quota exceeded
+    app.add_middleware(IdempotencyMiddleware) # Handles idempotency key check
     app.add_middleware(RateLimitMiddleware)   # Rate limits /public/* by API Key
     app.add_middleware(APIKeyMiddleware)      # Authenticates /public/* with X-API-Key
 

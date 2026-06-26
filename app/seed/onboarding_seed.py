@@ -2,7 +2,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.db.session import async_session_maker
+from app.db.session import AsyncSessionLocal
 from app.models.onboarding import OnboardingWorkflow, OnboardingStepDefinition
 
 
@@ -147,7 +147,7 @@ async def seed_chile_dte_onboarding(db: AsyncSession):
     print("Seed completed successfully.")
 
 async def main():
-    async with async_session_maker() as session:
+    async with AsyncSessionLocal() as session:
         await seed_chile_dte_onboarding(session)
 
 if __name__ == "__main__":

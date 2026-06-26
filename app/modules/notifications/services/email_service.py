@@ -34,3 +34,17 @@ class EmailService:
             html_content=html_content,
             attachments=attachments,
         )
+
+    def send_simple_email(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+    ) -> bool:
+        logger.info("Sending simple notification email", extra={"to": to_email, "subject": subject})
+        return self.provider.send_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_content,
+        )
+
