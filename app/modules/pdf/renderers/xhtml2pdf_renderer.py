@@ -20,11 +20,11 @@ class Xhtml2PdfRenderer(BasePdfRenderer):
     def render(self, dte: DTE, template_data: dict[str, Any]) -> bytes:
         template = self.env.get_template("invoice.html")
         html_content = template.render(**template_data)
-        
+
         result = io.BytesIO()
         pdf = pisa.pisaDocument(io.StringIO(html_content), result)
         if pdf.err:
             logger.error("Error rendering PDF with xhtml2pdf")
             raise RuntimeError("Failed to generate PDF")
-        
+
         return result.getvalue()

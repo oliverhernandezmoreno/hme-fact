@@ -14,7 +14,7 @@ type TaxFormValues = z.infer<typeof taxSchema>;
 export function TaxConfigurationForm({ stepCode }: { stepCode: string }) {
   const { completeStep } = useOnboardingStore();
   const { register, handleSubmit, formState: { errors } } = useForm<TaxFormValues>({
-    resolver: zodResolver(taxSchema),
+    resolver: zodResolver(taxSchema) as any,
   });
 
   const onSubmit = async (data: TaxFormValues) => {

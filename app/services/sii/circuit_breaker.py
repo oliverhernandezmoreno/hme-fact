@@ -1,7 +1,9 @@
-import time
 import logging
-from httpx import HTTPStatusError, RequestError
+import time
+
 import redis.asyncio as redis
+from httpx import HTTPStatusError, RequestError
+
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -9,24 +11,26 @@ logger = logging.getLogger(__name__)
 
 class SIICircuitBreakerOpenException(Exception):
     """Raised when the SII Web Services circuit is OPEN."""
+
     pass
 
 
 class SIICircuitBreaker:
     """
-    Redis-backed distributed Circuit Breaker to prevent cascading failures 
+    Redis-backed distributed Circuit Breaker to prevent cascading failures
     and overload of the SII when they experience 5xx errors or timeouts.
     """
+
     def __init__(self, failure_threshold: int | None = None, recovery_timeout: int | None = None):
         self.settings = get_settings()
         self.failure_threshold = (
-            failure_threshold 
-            if failure_threshold is not None 
+            failure_threshold
+            if failure_threshold is not None
             else self.settings.SII_CB_FAILURE_THRESHOLD
         )
         self.recovery_timeout = (
-            recovery_timeout 
-            if recovery_timeout is not None 
+            recovery_timeout
+            if recovery_timeout is not None
             else self.settings.SII_CB_RECOVERY_TIMEOUT
         )
         self.state_key = "sii:cb:state"
@@ -45,7 +49,9 @@ class SIICircuitBreaker:
                 if last_change:
                     elapsed = time.time() - float(last_change)
                     if elapsed >= self.recovery_timeout:
-                        logger.info("Circuit breaker recovery timeout reached. Transitioning to HALF_OPEN.")
+                        logger.info(
+                            "Circuit breaker recovery timeout reached. Transitioning to HALF_OPEN."
+                        )
                         await r.set(self.state_key, "HALF_OPEN")
                         state = "HALF_OPEN"
             return state
@@ -74,7 +80,9 @@ class SIICircuitBreaker:
             state = await r.get(self.state_key) or "CLOSED"
             failures = await r.incr(self.failure_count_key)
             if state == "HALF_OPEN" or failures >= self.failure_threshold:
-                logger.warning(f"Circuit Breaker threshold reached or failure in HALF_OPEN. Opening circuit. Failures: {failures}")
+                logger.warning(
+                    f"Circuit Breaker threshold reached or failure in HALF_OPEN. Opening circuit. Failures: {failures}"
+                )
                 await r.set(self.state_key, "OPEN")
                 await r.set(self.last_state_change_key, time.time())
         except Exception as e:
@@ -85,8 +93,10 @@ class SIICircuitBreaker:
     async def call(self, func, *args, **kwargs):
         state = await self.get_state()
         if state == "OPEN":
-            raise SIICircuitBreakerOpenException("SII Web Services circuit is currently OPEN due to consecutive failures.")
-        
+            raise SIICircuitBreakerOpenException(
+                "SII Web Services circuit is currently OPEN due to consecutive failures."
+            )
+
         try:
             result = await func(*args, **kwargs)
             await self.record_success()
@@ -96,7 +106,7 @@ class SIICircuitBreaker:
             is_5xx = False
             if isinstance(exc, HTTPStatusError):
                 is_5xx = exc.response.status_code >= 500
-            
+
             if is_5xx or isinstance(exc, RequestError):
                 await self.record_failure()
             raise exc
@@ -123,17 +133,17 @@ class SIICircuitBreaker:
             state = await r.get(self.state_key) or "CLOSED"
             failures = int(await r.get(self.failure_count_key) or 0)
             last_change = await r.get(self.last_state_change_key)
-            
+
             elapsed = 0.0
             remaining_lock_time = 0.0
-            
+
             if last_change:
                 elapsed = time.time() - float(last_change)
                 if state == "OPEN":
                     remaining_lock_time = max(0.0, self.recovery_timeout - elapsed)
                     if elapsed >= self.recovery_timeout:
                         state = "HALF_OPEN"
-            
+
             return {
                 "state": state,
                 "failures": failures,
@@ -150,8 +160,7 @@ class SIICircuitBreaker:
                 "failures": 0,
                 "failure_threshold": self.failure_threshold,
                 "recovery_timeout_seconds": self.recovery_timeout,
-                "error": str(e)
+                "error": str(e),
             }
         finally:
             await r.aclose()
-

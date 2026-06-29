@@ -38,16 +38,15 @@ class CertificateSecurityService:
 
     def extract_metadata(self, pfx_data: bytes, password: str) -> CertificateMetadata:
         private_key, certificate, additional_certificates = pkcs12.load_key_and_certificates(
-            pfx_data,
-            password.encode("utf-8")
+            pfx_data, password.encode("utf-8")
         )
-        
+
         common_name = ""
         for attribute in certificate.subject:
-            if attribute.oid.dotted_string == "2.5.4.3": # CN
+            if attribute.oid.dotted_string == "2.5.4.3":  # CN
                 common_name = str(attribute.value)
                 break
-                
+
         return {
             "common_name": common_name,
             "serial_number": str(certificate.serial_number),

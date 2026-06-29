@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select, update
 
@@ -13,7 +13,7 @@ class UsageMetricRepository(BaseRepository[UsageMetric]):
     model = UsageMetric
 
     def _now(self) -> tuple[int, int]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return now.month, now.year
 
     async def get_current_period(self, company_id: uuid.UUID) -> UsageMetric | None:

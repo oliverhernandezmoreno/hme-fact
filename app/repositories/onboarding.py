@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC
 
 from sqlalchemy import select
 
@@ -45,11 +46,12 @@ class OnboardingRepository(BaseRepository[OnboardingWizard]):
         )
 
     async def mark_complete(self, wizard: OnboardingWizard) -> OnboardingWizard:
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         return await self.update(
             wizard,
             {
                 "is_completed": True,
-                "completed_at": datetime.now(timezone.utc),
+                "completed_at": datetime.now(UTC),
             },
         )

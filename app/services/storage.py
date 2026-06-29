@@ -52,7 +52,7 @@ class LocalFileStorageService(BaseFileStorageService):
         full_path = self._get_full_path(path)
         if not os.path.exists(full_path):
             raise FileNotFoundError(f"File not found: {path}")
-        
+
         def iter_file():
             with open(full_path, "rb") as f:
                 while True:
@@ -60,6 +60,7 @@ class LocalFileStorageService(BaseFileStorageService):
                     if not chunk:
                         break
                     yield chunk
+
         return iter_file()
 
     async def delete_file(self, path: str) -> None:

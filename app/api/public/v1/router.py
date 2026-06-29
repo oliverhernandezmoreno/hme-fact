@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.public.v1.endpoints import customers, products, dte, status
+from app.api.public.v1.endpoints import customers, dte, products, status
 
 public_router = APIRouter()
 

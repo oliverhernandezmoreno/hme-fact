@@ -8,6 +8,7 @@ router = APIRouter()
 
 class DTEPublicEmitRequest(BaseModel):
     """Simplified DTE emission request for public API consumers."""
+
     dte_type: int  # 33=Factura, 39=Boleta, 61=Nota Crédito, etc.
     customer_rut: str
     customer_name: str
@@ -48,8 +49,9 @@ async def emit_dte(body: DTEPublicEmitRequest, request: Request):
 
 @router.get("/{folio}", summary="Get DTE status by folio")
 async def get_dte_status(folio: int, request: Request):
-    from app.db.session import AsyncSessionLocal
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
     from app.models.dte import DTE
 
     company_id = request.state.company_id
@@ -73,8 +75,9 @@ async def get_dte_status(folio: int, request: Request):
 @router.get("/{folio}/pdf", summary="Download DTE PDF")
 async def get_dte_pdf(folio: int, request: Request):
     from fastapi.responses import FileResponse
-    from app.db.session import AsyncSessionLocal
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
     from app.models.dte import DTE
 
     company_id = request.state.company_id
@@ -94,8 +97,9 @@ async def get_dte_pdf(folio: int, request: Request):
 @router.get("/{folio}/xml", summary="Download DTE XML")
 async def get_dte_xml(folio: int, request: Request):
     from fastapi.responses import Response
-    from app.db.session import AsyncSessionLocal
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
     from app.models.dte import DTE
     from app.models.dte_xml import DTEXml
 

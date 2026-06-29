@@ -87,9 +87,7 @@ class SimpleApiHttpClient:
         response, _duration_ms = await self._send(method, path)
         content_type = response.headers.get("content-type", "")
         payload = (
-            self._json_payload(response)
-            if content_type.startswith("application/json")
-            else {}
+            self._json_payload(response) if content_type.startswith("application/json") else {}
         )
         self._raise_for_provider_error(response, payload)
         return response.content

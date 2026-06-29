@@ -6,7 +6,6 @@ from typing import Any
 import redis.asyncio as redis
 from fastapi import APIRouter
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import SessionDep
 from app.core.config import get_settings

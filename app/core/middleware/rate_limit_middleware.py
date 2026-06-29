@@ -26,8 +26,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         try:
-            from app.core.config import get_settings
             import redis.asyncio as aioredis
+
+            from app.core.config import get_settings
 
             settings = get_settings()
             redis = aioredis.from_url(str(settings.REDIS_URL), decode_responses=True)

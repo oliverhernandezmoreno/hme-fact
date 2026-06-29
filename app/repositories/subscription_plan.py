@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
 
-from app.models.billing import Subscription, SubscriptionFeature, SubscriptionPlan
+from app.models.billing import Subscription, SubscriptionPlan
 from app.repositories.base import BaseRepository
 
 
@@ -43,9 +43,7 @@ class SubscriptionRepository(BaseRepository[Subscription]):
     async def get_by_company(self, company_id: uuid.UUID) -> Subscription | None:
         result = await self.session.scalars(
             select(Subscription)
-            .options(
-                joinedload(Subscription.plan).joinedload(SubscriptionPlan.features)
-            )
+            .options(joinedload(Subscription.plan).joinedload(SubscriptionPlan.features))
             .where(Subscription.company_id == company_id)
         )
         return result.first()
@@ -64,10 +62,10 @@ class SubscriptionRepository(BaseRepository[Subscription]):
     async def get_expiring_soon(self, hours: int = 48) -> list[Subscription]:
         """Returns subscriptions expiring within the next N hours."""
         from datetime import timedelta
-        cutoff = datetime.now(timezone.utc) + timedelta(hours=hours)
+
+        cutoff = datetime.now(UTC) + timedelta(hours=hours)
         result = await self.session.scalars(
-            select(Subscription)
-            .where(
+            select(Subscription).where(
                 Subscription.status == "active",
                 Subscription.current_period_end <= cutoff,
                 Subscription.cancel_at_period_end == False,
@@ -77,7 +75,7 @@ class SubscriptionRepository(BaseRepository[Subscription]):
 
     async def expire_subscriptions(self) -> int:
         """Marks past-due active subscriptions as expired. Returns count."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self.session.execute(
             update(Subscription)
             .where(
@@ -91,9 +89,6 @@ class SubscriptionRepository(BaseRepository[Subscription]):
 
     async def get_all_with_plan(self, *, offset: int = 0, limit: int = 100) -> list[Subscription]:
         result = await self.session.scalars(
-            select(Subscription)
-            .options(joinedload(Subscription.plan))
-            .offset(offset)
-            .limit(limit)
+            select(Subscription).options(joinedload(Subscription.plan)).offset(offset).limit(limit)
         )
         return list(result.unique())

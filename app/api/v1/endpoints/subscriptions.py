@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUserDep, SessionDep, TenantDep
-from app.modules.billing.services.subscription_service import SubscriptionService, SubscriptionServiceError
 from app.modules.billing.services.quota_service import QuotaService
+from app.modules.billing.services.subscription_service import (
+    SubscriptionService,
+    SubscriptionServiceError,
+)
 
 router = APIRouter()
 
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
+
 
 class PlanOut(BaseModel):
     id: uuid.UUID
@@ -69,9 +72,11 @@ class ChangePlanRequest(BaseModel):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+
 @router.get("/plans", summary="List available subscription plans")
 async def list_plans(session: SessionDep):
     from app.repositories.subscription_plan import SubscriptionPlanRepository
+
     repo = SubscriptionPlanRepository(session)
     plans = await repo.get_active_plans()
     result = []
@@ -87,18 +92,20 @@ async def list_plans(session: SessionDep):
                 "storage_limit_mb": p.features.storage_limit_mb,
                 "support_level": p.features.support_level,
             }
-        result.append({
-            "id": str(p.id),
-            "name": p.name,
-            "code": p.code,
-            "description": p.description,
-            "price": float(p.price),
-            "currency": p.currency,
-            "billing_cycle": p.billing_cycle,
-            "trial_days": p.trial_days,
-            "sort_order": p.sort_order,
-            "features": features,
-        })
+        result.append(
+            {
+                "id": str(p.id),
+                "name": p.name,
+                "code": p.code,
+                "description": p.description,
+                "price": float(p.price),
+                "currency": p.currency,
+                "billing_cycle": p.billing_cycle,
+                "trial_days": p.trial_days,
+                "sort_order": p.sort_order,
+                "features": features,
+            }
+        )
     return result
 
 
@@ -152,7 +159,9 @@ async def get_usage(
     }
 
 
-@router.post("/activate", status_code=status.HTTP_201_CREATED, summary="Activate a subscription plan")
+@router.post(
+    "/activate", status_code=status.HTTP_201_CREATED, summary="Activate a subscription plan"
+)
 async def activate_subscription(
     body: ActivateRequest,
     session: SessionDep,
@@ -192,7 +201,11 @@ async def cancel_subscription(
     svc = SubscriptionService(session)
     try:
         sub = await svc.cancel(company_id, at_period_end=at_period_end)
-        return {"id": str(sub.id), "status": sub.status, "cancel_at_period_end": sub.cancel_at_period_end}
+        return {
+            "id": str(sub.id),
+            "status": sub.status,
+            "cancel_at_period_end": sub.cancel_at_period_end,
+        }
     except SubscriptionServiceError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
@@ -204,7 +217,9 @@ async def list_billing_events(
     company_id: TenantDep,
 ):
     from sqlalchemy import select
+
     from app.models.billing import BillingEvent
+
     result = await session.execute(
         select(BillingEvent)
         .where(BillingEvent.company_id == company_id)

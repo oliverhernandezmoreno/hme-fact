@@ -1,7 +1,9 @@
-import pytest
 import time
+from unittest.mock import AsyncMock, patch
+
 import httpx
-from unittest.mock import AsyncMock, patch, MagicMock
+import pytest
+
 from app.services.sii.circuit_breaker import SIICircuitBreaker, SIICircuitBreakerOpenException
 from app.services.sii.client import SIIWebServicesClient
 
@@ -142,4 +144,3 @@ def test_circuit_breaker_settings_defaults():
     cb = SIICircuitBreaker()
     assert cb.failure_threshold == 5
     assert cb.recovery_timeout == 60
-

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import logging
+
+import redis.asyncio as aioredis
 from fastapi import Request
+from starlette.concurrency import iterate_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
-from starlette.concurrency import iterate_in_threadpool
+
 from app.core.config import get_settings
-import redis.asyncio as aioredis
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
     Garantiza que las solicitudes con la misma clave e inquilino devuelvan la misma respuesta.
     El estado se almacena en Redis con un TTL de 24 horas.
     """
+
     IDEMPOTENCY_HEADER = "idempotency-key"
     PUBLIC_PREFIX = "/public/"
 
@@ -46,11 +49,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             # Intentar establecer estado "processing"
             # Si retorna True, somos la primera petición
             set_success = await redis_client.set(redis_key, "processing", nx=True, ex=30)
-            
+
             if not set_success:
                 # La clave ya existe en Redis (duplicada o ya procesada)
                 val = await redis_client.get(redis_key)
-                
+
                 if val == "processing":
                     # Petición concurrente en proceso
                     await redis_client.aclose()
@@ -59,27 +62,27 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         content={
                             "error": "conflict",
                             "message": "A request with this idempotency key is already in progress.",
-                        }
+                        },
                     )
-                
+
                 # Ya fue procesada, retornar respuesta cacheada
                 if val:
                     cached_data = json.loads(val)
                     await redis_client.aclose()
-                    
+
                     headers = cached_data.get("headers", {})
                     headers["X-Cache-Idempotency"] = "HIT"
-                    
+
                     # Content-Length no debe ser forzado incorrectamente
                     headers.pop("content-length", None)
-                    
+
                     return Response(
                         content=cached_data["content"].encode("utf-8"),
                         status_code=cached_data["status_code"],
                         media_type=headers.get("content-type", "application/json"),
-                        headers=headers
+                        headers=headers,
                     )
-            
+
             # Si somos la primera petición, procedemos a ejecutarla
             try:
                 response = await call_next(request)
@@ -105,9 +108,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             cached_data = {
                 "status_code": response.status_code,
                 "content": body.decode("utf-8", errors="replace"),
-                "headers": dict(response.headers)
+                "headers": dict(response.headers),
             }
-            
+
             # Guardar en Redis con TTL de 24 horas (86400 segundos)
             await redis_client.set(redis_key, json.dumps(cached_data), ex=86400)
             await redis_client.aclose()

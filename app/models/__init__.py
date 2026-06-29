@@ -1,7 +1,13 @@
 from app.db.base import Base
 from app.models.api_key import APIKey, APIUsageLog
 from app.models.audit_log import AuditLog
-from app.models.billing import BillingEvent, Subscription, SubscriptionFeature, SubscriptionPlan, UsageMetric
+from app.models.billing import (
+    BillingEvent,
+    Subscription,
+    SubscriptionFeature,
+    SubscriptionPlan,
+    UsageMetric,
+)
 from app.models.caf_file import CAFFile
 from app.models.certificate import Certificate
 from app.models.company import Company
@@ -22,9 +28,16 @@ from app.models.integration import (
     WebhookDelivery,
     WebhookSubscription,
 )
-from app.models.onboarding import OnboardingSession, OnboardingStepDefinition, OnboardingStepStatus, OnboardingWorkflow, OnboardingEvent
+from app.models.onboarding import (
+    OnboardingEvent,
+    OnboardingSession,
+    OnboardingStepDefinition,
+    OnboardingStepStatus,
+    OnboardingWorkflow,
+)
 from app.models.product import Product
-from app.models.rbac import Permission, Role, RolePermission, UserRole as DynamicUserRole
+from app.models.rbac import Permission, Role, RolePermission
+from app.models.rbac import UserRole as DynamicUserRole
 from app.models.saas_metrics import SaasMetricsSnapshot
 from app.models.user import User
 

@@ -1,6 +1,9 @@
-from celery import shared_task
 import json
+
+from celery import shared_task
+
 from app.services.integrations.mappers import OrderToDTEMapper
+
 
 @shared_task(bind=True, max_retries=3)
 def process_inbound_webhook(self, connection_id: str, provider: str, raw_payload: str):
@@ -12,8 +15,8 @@ def process_inbound_webhook(self, connection_id: str, provider: str, raw_payload
         if provider == "shopify":
             order = OrderToDTEMapper.map_shopify_order(payload)
         elif provider == "woocommerce":
-            pass # map woocommerce
-        
+            pass  # map woocommerce
+
         # Then we create DTE using standard DTE services
         # mapped_dte = OrderToDTEMapper.to_dte_payload(order)
         # issue_dte(mapped_dte)
@@ -28,14 +31,16 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
     Send webhooks to subscribers (e.g., when a DTE is issued, cert expiring, or CAF depleted).
     """
     import asyncio
-    import requests
-    import hmac
     import hashlib
+    import hmac
     import json
     import uuid
-    from app.db.session import AsyncSessionLocal
-    from app.models.integration import WebhookSubscription, WebhookDelivery
+
+    import requests
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
+    from app.models.integration import WebhookDelivery, WebhookSubscription
 
     def _run_async(coro):
         loop = asyncio.new_event_loop()
@@ -49,7 +54,7 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
             result = await session.execute(
                 select(WebhookSubscription).where(
                     WebhookSubscription.id == uuid.UUID(subscription_id),
-                    WebhookSubscription.is_active == True
+                    WebhookSubscription.is_active == True,
                 )
             )
             sub = result.scalar_one_or_none()
@@ -58,9 +63,7 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
 
             payload_str = json.dumps(payload)
             signature = hmac.new(
-                sub.secret.encode("utf-8"),
-                payload_str.encode("utf-8"),
-                hashlib.sha256
+                sub.secret.encode("utf-8"), payload_str.encode("utf-8"), hashlib.sha256
             ).hexdigest()
 
             headers = {
@@ -92,14 +95,16 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
                 status=status,
                 status_code=status_code,
                 response_body=response_body,
-                attempt=self.request.retries + 1
+                attempt=self.request.retries + 1,
             )
             session.add(delivery)
             await session.commit()
 
             if status == "failed":
                 if status_code is None or status_code >= 500:
-                    raise RuntimeError(f"Webhook delivery failed with status {status_code} or network error")
+                    raise RuntimeError(
+                        f"Webhook delivery failed with status {status_code} or network error"
+                    )
 
             return {"status": status, "status_code": status_code}
 
@@ -107,4 +112,3 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
         return _run_async(_send())
     except Exception as exc:
         self.retry(exc=exc, countdown=60)
-

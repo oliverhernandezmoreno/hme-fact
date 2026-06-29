@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.billing import Subscription, SubscriptionPlan
 from app.models.company import Company
-from app.models.company_user import CompanyUser
-from app.models.dte import DTE
 from app.models.user import User
 from app.repositories.saas_metrics import SaasMetricsRepository
 from app.repositories.usage_metric import UsageMetricRepository
@@ -25,8 +23,8 @@ class SaasMetricsService:
         Computes platform-wide KPIs and saves/updates today's snapshot.
         Called by Celery beat task daily at 02:00 UTC.
         """
-        today = datetime.now(timezone.utc).date()
-        now = datetime.now(timezone.utc)
+        today = datetime.now(UTC).date()
+        now = datetime.now(UTC)
         month, year = now.month, now.year
         period_label = f"{year:04d}-{month:02d}"
 
@@ -36,7 +34,9 @@ class SaasMetricsService:
         suspended_companies = await self._count_companies_by_status("suspended")
 
         # --- Users ---
-        total_users_result = await self._session.execute(select(func.count(User.id)).where(User.is_active == True))
+        total_users_result = await self._session.execute(
+            select(func.count(User.id)).where(User.is_active == True)
+        )
         total_users = total_users_result.scalar_one()
 
         # --- Usage this month ---
@@ -127,7 +127,7 @@ class SaasMetricsService:
         return result.scalar_one()
 
     async def _count_new_companies_this_month(self) -> int:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         result = await self._session.execute(
             select(func.count(Company.id)).where(
@@ -138,7 +138,7 @@ class SaasMetricsService:
         return result.scalar_one()
 
     async def _count_cancelled_this_month(self) -> int:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         result = await self._session.execute(
             select(func.count(Subscription.id)).where(

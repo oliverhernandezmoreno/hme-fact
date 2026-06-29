@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import DTE, DTEStatus, DTEEventType
+from app.models import DTE, DTEEventType, DTEStatus
 from app.modules.integrations.services import TaxIntegrationService
 from app.modules.notifications.services.email_service import EmailService
 from app.modules.pdf.services.pdf_generator import PdfGeneratorService
@@ -37,7 +37,9 @@ async def send_dte_task(self: Any, dte_id: str, company_id: str, session: AsyncS
 
 @celery_app.task(bind=True, max_retries=5)
 @async_task
-async def check_dte_status_task(self: Any, dte_id: str, company_id: str, session: AsyncSession) -> None:
+async def check_dte_status_task(
+    self: Any, dte_id: str, company_id: str, session: AsyncSession
+) -> None:
     logger.info("Starting background task: check_dte_status_task", extra={"dte_id": dte_id})
     try:
         service = get_tax_integration_service(session)
@@ -49,10 +51,13 @@ async def check_dte_status_task(self: Any, dte_id: str, company_id: str, session
 
 @celery_app.task(bind=True, max_retries=2)
 @async_task
-async def generate_dte_pdf_task(self: Any, dte_id: str, company_id: str, session: AsyncSession) -> None:
+async def generate_dte_pdf_task(
+    self: Any, dte_id: str, company_id: str, session: AsyncSession
+) -> None:
     logger.info("Starting background task: generate_dte_pdf_task", extra={"dte_id": dte_id})
     try:
         from sqlalchemy import select
+
         result = await session.execute(
             select(DTE).where(DTE.id == uuid.UUID(dte_id), DTE.company_id == uuid.UUID(company_id))
         )
@@ -80,12 +85,18 @@ async def generate_dte_pdf_task(self: Any, dte_id: str, company_id: str, session
 
 @celery_app.task(bind=True, max_retries=3)
 @async_task
-async def send_dte_email_task(self: Any, dte_id: str, company_id: str, to_email: str, session: AsyncSession) -> None:
-    logger.info("Starting background task: send_dte_email_task", extra={"dte_id": dte_id, "to": to_email})
+async def send_dte_email_task(
+    self: Any, dte_id: str, company_id: str, to_email: str, session: AsyncSession
+) -> None:
+    logger.info(
+        "Starting background task: send_dte_email_task", extra={"dte_id": dte_id, "to": to_email}
+    )
     try:
         from sqlalchemy import select
+
         result = await session.execute(
-            select(DTE).where(DTE.id == uuid.UUID(dte_id), DTE.company_id == uuid.UUID(company_id))
+            select(DTE)
+            .where(DTE.id == uuid.UUID(dte_id), DTE.company_id == uuid.UUID(company_id))
             .options(selectinload(DTE.company), selectinload(DTE.customer))
         )
         dte = result.scalar_one_or_none()
@@ -95,8 +106,9 @@ async def send_dte_email_task(self: Any, dte_id: str, company_id: str, to_email:
 
         # Fetch files from storage
         from app.services.storage import get_file_storage_service
+
         storage = get_file_storage_service()
-        
+
         pdf_path = f"companies/{dte.company_id}/dtes/{dte.id}/dte_{dte.folio}.pdf"
         try:
             pdf_content = await storage.get_file(pdf_path)
@@ -104,17 +116,17 @@ async def send_dte_email_task(self: Any, dte_id: str, company_id: str, to_email:
             pdf_content = None
 
         email_service = EmailService()
-        
+
         # Simple HTML template for the email (we could also use jinja here)
         html_content = f"""
         <html><body>
             <h2>Documento Tributario Electrónico</h2>
-            <p>Estimado(a) {dte.customer.legal_name if dte.customer else 'Cliente'},</p>
+            <p>Estimado(a) {dte.customer.legal_name if dte.customer else "Cliente"},</p>
             <p>Se ha emitido el documento tipo {dte.dte_type} N° {dte.folio}.</p>
             <p>Total: ${dte.total_amount}</p>
         </body></html>
         """
-        
+
         success = email_service.send_dte_notification(
             to_email=to_email,
             subject=f"DTE N° {dte.folio} - {dte.company.legal_name if dte.company else ''}",
@@ -146,19 +158,18 @@ async def retry_failed_dtes_task(session: AsyncSession) -> None:
     logger.info("Running scheduled task: retry_failed_dtes_task")
     try:
         # Retry DTEs in ERROR or CONTINGENCY status
-        from sqlalchemy import or_
+        from sqlalchemy import or_, select
+
         result = await session.execute(
             select(DTE).where(
-                or_(
-                    DTE.status == DTEStatus.ERROR,
-                    DTE.status == DTEStatus.CONTINGENCY
-                )
+                or_(DTE.status == DTEStatus.ERROR, DTE.status == DTEStatus.CONTINGENCY)
             )
         )
         dtes = result.scalars().all()
         for dte in dtes:
             if dte.sii_xml:
                 from app.workers.tasks.dte_emission import emit_dte_task
+
                 emit_dte_task.delay(str(dte.id))
             else:
                 send_dte_task.delay(str(dte.id), str(dte.company_id))

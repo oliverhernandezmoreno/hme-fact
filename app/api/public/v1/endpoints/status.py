@@ -38,5 +38,8 @@ async def get_usage(request: Request):
         "plan": summary.plan_name,
         "period": f"{summary.period_year}-{summary.period_month:02d}",
         "dtes": {"used": summary.dtes_used, "limit": summary.dtes_limit},
-        "api_calls": {"used": summary.api_calls_used, "rate_limit_per_min": summary.api_rate_limit_per_min},
+        "api_calls": {
+            "used": summary.api_calls_used,
+            "rate_limit_per_min": summary.api_rate_limit_per_min,
+        },
     }

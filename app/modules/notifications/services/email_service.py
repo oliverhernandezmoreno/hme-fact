@@ -47,4 +47,3 @@ class EmailService:
             subject=subject,
             html_content=html_content,
         )
-

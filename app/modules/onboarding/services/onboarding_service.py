@@ -5,9 +5,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.onboarding import OnboardingWizard, ONBOARDING_STEPS
+from app.models.onboarding import ONBOARDING_STEPS, OnboardingWizard
 from app.repositories.onboarding import OnboardingRepository
-
 
 STEP_LABELS = {
     1: "Datos de empresa",

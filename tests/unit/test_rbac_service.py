@@ -1,12 +1,13 @@
 """Unit tests for RBACService."""
+
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.modules.rbac.services.rbac_service import RBACService, SYSTEM_ROLES
+from app.modules.rbac.services.rbac_service import SYSTEM_ROLES, RBACService
 
 
 @pytest.fixture
@@ -63,8 +64,12 @@ class TestRBACService:
     @pytest.mark.asyncio
     async def test_has_permission_wildcard(self, mock_session, user_id, company_id):
         svc = RBACService(mock_session)
-        with patch.object(svc._user_role_repo, "has_role", return_value=False), \
-             patch.object(svc._user_role_repo, "get_user_permissions", return_value={("dte", "read", "*")}):
+        with (
+            patch.object(svc._user_role_repo, "has_role", return_value=False),
+            patch.object(
+                svc._user_role_repo, "get_user_permissions", return_value={("dte", "read", "*")}
+            ),
+        ):
             result = await svc.has_permission(user_id, company_id, "dte", "read")
         assert result is True
 
@@ -81,7 +86,11 @@ class TestRBACService:
         mock_role = MagicMock()
         mock_role.id = uuid.uuid4()
 
-        with patch.object(svc._role_repo, "get_by_name", return_value=mock_role), \
-             patch.object(svc._user_role_repo, "assign_role", return_value=MagicMock()):
+        with (
+            patch.object(svc._role_repo, "get_by_name", return_value=mock_role),
+            patch.object(svc._user_role_repo, "assign_role", return_value=MagicMock()),
+        ):
             await svc.assign_role(user_id, "Accountant", company_id)
-            svc._user_role_repo.assign_role.assert_called_once_with(user_id, mock_role.id, company_id)
+            svc._user_role_repo.assign_role.assert_called_once_with(
+                user_id, mock_role.id, company_id
+            )

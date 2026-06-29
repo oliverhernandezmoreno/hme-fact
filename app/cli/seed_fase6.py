@@ -3,6 +3,7 @@ CLI commands for hmEFact platform seeding.
 Usage:
     python -m app.cli.seed_fase6
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -99,10 +100,11 @@ PLANS_SEED = [
 
 
 async def seed_plans_and_roles() -> None:
-    from app.db.session import AsyncSessionLocal
-    from app.models.billing import SubscriptionPlan, SubscriptionFeature
-    from app.modules.rbac.services.rbac_service import RBACService
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
+    from app.models.billing import SubscriptionFeature, SubscriptionPlan
+    from app.modules.rbac.services.rbac_service import RBACService
 
     async with AsyncSessionLocal() as session:
         # ── Seed Plans ────────────────────────────────────────────────────

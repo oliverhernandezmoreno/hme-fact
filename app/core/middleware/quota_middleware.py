@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import time
-
-from fastapi import Request, Response
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 

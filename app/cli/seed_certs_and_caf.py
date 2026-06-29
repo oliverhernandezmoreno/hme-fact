@@ -3,24 +3,23 @@ CLI script to seed mock digital certificates and CAF files for all companies.
 Usage:
     python -m app.cli.seed_certs_and_caf
 """
+
 from __future__ import annotations
 
 import asyncio
 import datetime
 import logging
-from decimal import Decimal
-from uuid import uuid4
 
 from cryptography import x509
-from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
+from sqlalchemy import select
 
 from app.db.session import AsyncSessionLocal
-from app.models import Company, Certificate, CAFFile
+from app.models import CAFFile, Certificate, Company
 from app.services.certificate_security import CertificateSecurityService
-from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -33,27 +32,28 @@ def generate_mock_pfx() -> tuple[bytes, str]:
     )
 
     # 2. Generate self-signed certificate
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, "CL"),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Metropolitana"),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, "Santiago"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "HME Fact SpA"),
-        x509.NameAttribute(NameOID.COMMON_NAME, "Oliver Hernandez Moreno"),
-    ])
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "CL"),
+            x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Metropolitana"),
+            x509.NameAttribute(NameOID.LOCALITY_NAME, "Santiago"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "HME Fact SpA"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Oliver Hernandez Moreno"),
+        ]
+    )
 
-    cert = x509.CertificateBuilder().subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        private_key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
-    ).not_valid_after(
-        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
-    ).sign(private_key, hashes.SHA256())
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(private_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1))
+        .not_valid_after(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=365)
+        )
+        .sign(private_key, hashes.SHA256())
+    )
 
     # 3. Create PKCS12 / PFX
     password = "mockpassword123"
@@ -73,7 +73,7 @@ def generate_mock_caf_xml(company_rut: str, company_name: str, dte_type: int) ->
     priv_pem = priv.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     ).decode("utf-8")
 
     # Clean RUT for comparison
@@ -125,8 +125,7 @@ async def seed_certs_and_caf() -> None:
             # Check if active cert already exists
             cert_res = await session.execute(
                 select(Certificate).where(
-                    Certificate.company_id == company.id,
-                    Certificate.is_active == True
+                    Certificate.company_id == company.id, Certificate.is_active == True
                 )
             )
             cert = cert_res.scalar_one_or_none()
@@ -140,7 +139,7 @@ async def seed_certs_and_caf() -> None:
                     encrypted_password=encrypted_password,
                     valid_from=metadata["valid_from"],
                     valid_until=metadata["valid_until"],
-                    is_active=True
+                    is_active=True,
                 )
                 session.add(cert)
                 logger.info(f"🔑 Created active certificate for company {company.legal_name}")
@@ -155,7 +154,9 @@ async def seed_certs_and_caf() -> None:
 
             # 2. Generate and save CAFs (33: Factura, 39: Boleta, 61: Nota Credito)
             for dte_type in [33, 39, 61]:
-                caf_xml, private_key = generate_mock_caf_xml(company.rut, company.legal_name, dte_type)
+                caf_xml, private_key = generate_mock_caf_xml(
+                    company.rut, company.legal_name, dte_type
+                )
 
                 # Check if CAF already exists for this type and range
                 caf_res = await session.execute(
@@ -163,7 +164,7 @@ async def seed_certs_and_caf() -> None:
                         CAFFile.company_id == company.id,
                         CAFFile.dte_type == dte_type,
                         CAFFile.folio_from == 1,
-                        CAFFile.folio_to == 1000
+                        CAFFile.folio_to == 1000,
                     )
                 )
                 caf = caf_res.scalar_one_or_none()
@@ -177,14 +178,18 @@ async def seed_certs_and_caf() -> None:
                         current_folio=1,
                         authorization_date=datetime.date(2024, 1, 1),
                         xml_content=caf_xml,
-                        private_key=private_key
+                        private_key=private_key,
                     )
                     session.add(caf)
-                    logger.info(f"📄 Created CAF for DTE type {dte_type} on company {company.legal_name}")
+                    logger.info(
+                        f"📄 Created CAF for DTE type {dte_type} on company {company.legal_name}"
+                    )
                 else:
                     caf.xml_content = caf_xml
                     caf.private_key = private_key
-                    logger.info(f"📄 Updated CAF for DTE type {dte_type} on company {company.legal_name}")
+                    logger.info(
+                        f"📄 Updated CAF for DTE type {dte_type} on company {company.legal_name}"
+                    )
 
         await session.commit()
         logger.info("🎉 Certificates and CAFs seeded successfully!")

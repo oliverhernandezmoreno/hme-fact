@@ -1,15 +1,19 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db_session
 from app.crud.crud_onboarding import onboarding as crud_onboarding
 from app.models.user import User
-from app.schemas.onboarding import OnboardingSessionResponse, OnboardingStartRequest, StepCompleteRequest, StepSaveRequest
+from app.schemas.onboarding import (
+    OnboardingSessionResponse,
+    OnboardingStartRequest,
+)
 
 router = APIRouter()
+
 
 @router.post("/start", response_model=OnboardingSessionResponse)
 async def start_onboarding(
@@ -25,6 +29,7 @@ async def start_onboarding(
         raise HTTPException(status_code=404, detail="No active workflow found for this country")
     # For now, return a 501 until full engine is connected. The DB entities are ready.
     raise HTTPException(status_code=501, detail="Workflow Initialization Logic Pending (Sprint 2)")
+
 
 @router.get("/session", response_model=OnboardingSessionResponse)
 async def get_session(

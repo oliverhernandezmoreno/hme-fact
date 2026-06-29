@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status, Request
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,23 +13,25 @@ from app.db.session import get_db_session
 from app.models import User
 from app.repositories.company_user import CompanyUserRepository
 
+
 class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
     async def __call__(self, request: Request) -> str | None:
         # Try header first
         authorization = request.headers.get("Authorization")
         if authorization and authorization.startswith("Bearer "):
             return authorization.split(" ")[1]
-            
+
         # Try cookie
         token = request.cookies.get("access_token")
         if token:
             return token
-            
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
 settings = get_settings()
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")

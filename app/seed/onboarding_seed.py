@@ -1,27 +1,30 @@
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
-from app.models.onboarding import OnboardingWorkflow, OnboardingStepDefinition
+from app.models.onboarding import OnboardingStepDefinition, OnboardingWorkflow
 
 
 async def seed_chile_dte_onboarding(db: AsyncSession):
     # Check if workflow already exists
-    existing = await db.execute(select(OnboardingWorkflow).where(OnboardingWorkflow.code == "chile_dte_standard_onboarding"))
+    existing = await db.execute(
+        select(OnboardingWorkflow).where(OnboardingWorkflow.code == "chile_dte_standard_onboarding")
+    )
     if existing.scalars().first():
         print("Workflow 'chile_dte_standard_onboarding' already exists. Skipping seed.")
         return
 
     print("Seeding Workflow: chile_dte_standard_onboarding")
-    
+
     workflow = OnboardingWorkflow(
         code="chile_dte_standard_onboarding",
         name="Onboarding Estándar Facturación Electrónica Chile",
         description="Flujo completo para configurar y emitir el primer DTE en Chile.",
         country_code="CL",
         version="1.0.0",
-        is_active=True
+        is_active=True,
     )
     db.add(workflow)
     await db.flush()  # To get workflow.id
@@ -116,12 +119,12 @@ async def seed_chile_dte_onboarding(db: AsyncSession):
             "required": True,
             "skippable": False,
             "depends_on": [
-                "company_profile", 
-                "tax_configuration", 
-                "digital_certificate", 
-                "caf_upload", 
-                "products_setup", 
-                "customers_setup"
+                "company_profile",
+                "tax_configuration",
+                "digital_certificate",
+                "caf_upload",
+                "products_setup",
+                "customers_setup",
             ],
         },
         {
@@ -133,22 +136,21 @@ async def seed_chile_dte_onboarding(db: AsyncSession):
             "required": True,
             "skippable": False,
             "depends_on": ["first_dte"],
-        }
+        },
     ]
 
     for step in steps_data:
-        s_def = OnboardingStepDefinition(
-            workflow_id=workflow.id,
-            **step
-        )
+        s_def = OnboardingStepDefinition(workflow_id=workflow.id, **step)
         db.add(s_def)
-    
+
     await db.commit()
     print("Seed completed successfully.")
+
 
 async def main():
     async with AsyncSessionLocal() as session:
         await seed_chile_dte_onboarding(session)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

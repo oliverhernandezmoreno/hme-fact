@@ -1,5 +1,7 @@
-import pytest
 from datetime import date
+
+import pytest
+
 from app.services.sii.caf_parser import CAFParser, CAFParserError
 
 

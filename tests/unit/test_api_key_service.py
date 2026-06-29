@@ -1,9 +1,10 @@
 """Unit tests for APIKeyService."""
+
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta, timezone
 import uuid
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -36,8 +37,14 @@ class TestAPIKeyService:
         mock_key.scopes = ["read", "dte"]
         mock_key.expires_at = None
 
-        with patch.object(svc._repo, "generate_key_pair", return_value=("abcdefgh", "abcdefgh.secretvalue", "hashed")), \
-             patch.object(svc._repo, "create", return_value=mock_key):
+        with (
+            patch.object(
+                svc._repo,
+                "generate_key_pair",
+                return_value=("abcdefgh", "abcdefgh.secretvalue", "hashed"),
+            ),
+            patch.object(svc._repo, "create", return_value=mock_key),
+        ):
             result = await svc.generate(
                 company_id=company_id,
                 name="Test Key",
@@ -63,7 +70,7 @@ class TestAPIKeyService:
     async def test_validate_expired_key(self, mock_session):
         svc = APIKeyService(mock_session)
         expired_key = MagicMock()
-        expired_key.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+        expired_key.expires_at = datetime.now(UTC) - timedelta(days=1)
 
         with patch.object(svc._repo, "get_by_prefix_and_hash", return_value=expired_key):
             result = await svc.validate("prefix.secret")
@@ -77,8 +84,10 @@ class TestAPIKeyService:
         valid_key.id = uuid.uuid4()
         valid_key.expires_at = None
 
-        with patch.object(svc._repo, "get_by_prefix_and_hash", return_value=valid_key), \
-             patch.object(svc._repo, "touch_last_used", return_value=None):
+        with (
+            patch.object(svc._repo, "get_by_prefix_and_hash", return_value=valid_key),
+            patch.object(svc._repo, "touch_last_used", return_value=None),
+        ):
             result = await svc.validate("prefix.secret")
 
         assert result is not None
@@ -114,10 +123,16 @@ class TestAPIKeyService:
         new_key.prefix = "newprefix"
         new_key.expires_at = None
 
-        with patch.object(svc._repo, "get", return_value=old_key), \
-             patch.object(svc._repo, "revoke", return_value=None), \
-             patch.object(svc._repo, "generate_key_pair", return_value=("newprefix", "newprefix.newsecret", "newhash")), \
-             patch.object(svc._repo, "create", return_value=new_key):
+        with (
+            patch.object(svc._repo, "get", return_value=old_key),
+            patch.object(svc._repo, "revoke", return_value=None),
+            patch.object(
+                svc._repo,
+                "generate_key_pair",
+                return_value=("newprefix", "newprefix.newsecret", "newhash"),
+            ),
+            patch.object(svc._repo, "create", return_value=new_key),
+        ):
             result = await svc.rotate(old_key.id, company_id, user_id)
 
         assert result.raw_key == "newprefix.newsecret"

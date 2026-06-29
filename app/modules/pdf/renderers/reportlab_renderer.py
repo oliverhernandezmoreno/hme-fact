@@ -6,7 +6,7 @@ from typing import Any
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.models import DTE
 from app.modules.pdf.renderers.base import BasePdfRenderer
@@ -19,9 +19,11 @@ class ReportLabRenderer(BasePdfRenderer):
         styles = getSampleStyleSheet()
         elements = []
 
-        elements.append(Paragraph(f"Documento Tributario Electrónico - {dte.folio}", styles["Title"]))
+        elements.append(
+            Paragraph(f"Documento Tributario Electrónico - {dte.folio}", styles["Title"])
+        )
         elements.append(Spacer(1, 12))
-        
+
         issuer = template_data.get("issuer", {})
         elements.append(Paragraph(f"Emisor: {issuer.get('legal_name')}", styles["Normal"]))
         elements.append(Paragraph(f"RUT: {issuer.get('rut')}", styles["Normal"]))
@@ -34,23 +36,29 @@ class ReportLabRenderer(BasePdfRenderer):
 
         data = [["Descripción", "Cantidad", "Precio Unitario", "Total"]]
         for item in template_data.get("items", []):
-            data.append([
-                str(item.get("description", "")),
-                str(item.get("quantity", "")),
-                f"${item.get('unit_price', 0)}",
-                f"${item.get('net_amount', 0)}"
-            ])
+            data.append(
+                [
+                    str(item.get("description", "")),
+                    str(item.get("quantity", "")),
+                    f"${item.get('unit_price', 0)}",
+                    f"${item.get('net_amount', 0)}",
+                ]
+            )
 
         table = Table(data, colWidths=[200, 80, 100, 100])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
         elements.append(table)
         elements.append(Spacer(1, 20))
 

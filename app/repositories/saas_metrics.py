@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date
 
 from sqlalchemy import desc, select
 
@@ -13,23 +13,20 @@ class SaasMetricsRepository(BaseRepository[SaasMetricsSnapshot]):
 
     async def get_by_date(self, snapshot_date: date) -> SaasMetricsSnapshot | None:
         result = await self.session.scalars(
-            select(SaasMetricsSnapshot).where(
-                SaasMetricsSnapshot.snapshot_date == snapshot_date
-            )
+            select(SaasMetricsSnapshot).where(SaasMetricsSnapshot.snapshot_date == snapshot_date)
         )
         return result.first()
 
     async def get_latest(self) -> SaasMetricsSnapshot | None:
         result = await self.session.scalars(
-            select(SaasMetricsSnapshot).order_by(
-                desc(SaasMetricsSnapshot.snapshot_date)
-            ).limit(1)
+            select(SaasMetricsSnapshot).order_by(desc(SaasMetricsSnapshot.snapshot_date)).limit(1)
         )
         return result.first()
 
     async def get_historical(self, days: int = 90) -> list[SaasMetricsSnapshot]:
-        from datetime import datetime, timedelta, timezone
-        cutoff = datetime.now(timezone.utc).date() - timedelta(days=days)
+        from datetime import datetime, timedelta
+
+        cutoff = datetime.now(UTC).date() - timedelta(days=days)
         result = await self.session.scalars(
             select(SaasMetricsSnapshot)
             .where(SaasMetricsSnapshot.snapshot_date >= cutoff)

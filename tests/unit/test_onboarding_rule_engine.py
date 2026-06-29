@@ -1,5 +1,5 @@
-import pytest
 from uuid import uuid4
+
 from app.models.onboarding import OnboardingSession, OnboardingStepDefinition, OnboardingStepStatus
 from app.services.onboarding_rule_engine import OnboardingRuleEngine
 
@@ -80,17 +80,36 @@ def test_calculate_progress():
 
 def test_determine_next_step():
     from app.schemas.onboarding import StepDefinitionResponse
+
     estep1 = StepDefinitionResponse(
-        code="s1", title="S1", description="D", component_type="F",
-        status="completed", required=True, skippable=False,
-        can_access=True, can_complete=True, can_skip=False,
-        blocking_reasons=[], validation_schema={}, help_content="",
+        code="s1",
+        title="S1",
+        description="D",
+        component_type="F",
+        status="completed",
+        required=True,
+        skippable=False,
+        can_access=True,
+        can_complete=True,
+        can_skip=False,
+        blocking_reasons=[],
+        validation_schema={},
+        help_content="",
     )
     estep2 = StepDefinitionResponse(
-        code="s2", title="S2", description="D", component_type="F",
-        status="pending", required=True, skippable=False,
-        can_access=True, can_complete=True, can_skip=False,
-        blocking_reasons=[], validation_schema={}, help_content="",
+        code="s2",
+        title="S2",
+        description="D",
+        component_type="F",
+        status="pending",
+        required=True,
+        skippable=False,
+        can_access=True,
+        can_complete=True,
+        can_skip=False,
+        blocking_reasons=[],
+        validation_schema={},
+        help_content="",
     )
     next_step = OnboardingRuleEngine.determine_next_step([], [estep1, estep2])
     assert next_step == "s2"

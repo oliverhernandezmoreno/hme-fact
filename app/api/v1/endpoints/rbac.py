@@ -19,6 +19,7 @@ class AssignRoleRequest(BaseModel):
 @router.get("/roles", summary="List available system roles")
 async def list_roles(session: SessionDep, current_user: CurrentUserDep):
     from app.repositories.rbac import RoleRepository
+
     repo = RoleRepository(session)
     roles = await repo.get_all_system()
     return [
@@ -45,13 +46,13 @@ async def my_permissions(
         "user_id": str(current_user.id),
         "company_id": str(company_id),
         "roles": [r.name for r in roles],
-        "permissions": [
-            {"module": m, "action": a, "resource": r} for m, a, r in sorted(perms)
-        ],
+        "permissions": [{"module": m, "action": a, "resource": r} for m, a, r in sorted(perms)],
     }
 
 
-@router.post("/users/{user_id}/roles", status_code=status.HTTP_201_CREATED, summary="Assign role to user")
+@router.post(
+    "/users/{user_id}/roles", status_code=status.HTTP_201_CREATED, summary="Assign role to user"
+)
 async def assign_role(
     user_id: uuid.UUID,
     body: AssignRoleRequest,

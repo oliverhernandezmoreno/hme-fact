@@ -21,8 +21,12 @@ class SaasMetricsSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     period_label: Mapped[str] = mapped_column(String(20), nullable=False)  # e.g. "2025-06"
 
     # Revenue
-    mrr: Mapped[float] = mapped_column(Numeric(14, 2), default=0, nullable=False)  # Monthly Recurring Revenue (CLP)
-    arr: Mapped[float] = mapped_column(Numeric(14, 2), default=0, nullable=False)  # Annual Recurring Revenue (CLP)
+    mrr: Mapped[float] = mapped_column(
+        Numeric(14, 2), default=0, nullable=False
+    )  # Monthly Recurring Revenue (CLP)
+    arr: Mapped[float] = mapped_column(
+        Numeric(14, 2), default=0, nullable=False
+    )  # Annual Recurring Revenue (CLP)
 
     # Companies
     active_companies: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

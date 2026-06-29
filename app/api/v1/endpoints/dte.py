@@ -16,7 +16,6 @@ from app.modules.integrations.services.tax_integration import (
 from app.modules.xml.services.xml_render_service import XmlRenderService
 from app.modules.xml.validators.exceptions import XmlValidationError
 from app.repositories.dte import DTERepository
-
 from app.schemas.dte import DTECreate, DTERead
 
 logger = logging.getLogger(__name__)
@@ -33,6 +32,7 @@ async def list_dtes(
     """Listar DTEs para la empresa activa"""
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
+
     from app.models.dte import DTE
 
     stmt = (
@@ -56,19 +56,25 @@ async def create_dte(
 ) -> DTERead:
     """Crear un borrador de DTE y asignar folio desde el CAF correspondiente"""
     from decimal import Decimal
+
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
+
     from app.models.caf_file import CAFFile
     from app.models.certificate import Certificate
     from app.models.dte import DTE
     from app.models.dte_item import DTEItem
 
     # 1. Buscar CAF disponible para el tipo de DTE y empresa
-    caf_stmt = select(CAFFile).where(
-        CAFFile.company_id == company_id,
-        CAFFile.dte_type == payload.dte_type,
-        CAFFile.current_folio <= CAFFile.folio_to
-    ).order_by(CAFFile.authorization_date.desc(), CAFFile.folio_from.asc())
+    caf_stmt = (
+        select(CAFFile)
+        .where(
+            CAFFile.company_id == company_id,
+            CAFFile.dte_type == payload.dte_type,
+            CAFFile.current_folio <= CAFFile.folio_to,
+        )
+        .order_by(CAFFile.authorization_date.desc(), CAFFile.folio_from.asc())
+    )
 
     caf_result = await session.execute(caf_stmt)
     caf_file = caf_result.scalar_one_or_none()
@@ -76,7 +82,7 @@ async def create_dte(
     if not caf_file:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"No hay folios disponibles para el tipo de documento {payload.dte_type}. Por favor, suba un archivo CAF válido."
+            detail=f"No hay folios disponibles para el tipo de documento {payload.dte_type}. Por favor, suba un archivo CAF válido.",
         )
 
     folio = caf_file.current_folio
@@ -84,8 +90,7 @@ async def create_dte(
 
     # 2. Buscar certificado digital activo para la empresa si existe
     cert_stmt = select(Certificate).where(
-        Certificate.company_id == company_id,
-        Certificate.is_active == True
+        Certificate.company_id == company_id, Certificate.is_active == True
     )
     cert_result = await session.execute(cert_stmt)
     certificate = cert_result.scalar_one_or_none()
@@ -135,7 +140,11 @@ async def create_dte(
     # 5. Crear items del DTE
     for idx, item in enumerate(payload.items, start=1):
         item_net = (item.quantity * item.unit_price - item.discount_amount).quantize(Decimal("1."))
-        item_tax = Decimal("0.00") if item.tax_exempt else (item_net * Decimal("0.19")).quantize(Decimal("1."))
+        item_tax = (
+            Decimal("0.00")
+            if item.tax_exempt
+            else (item_net * Decimal("0.19")).quantize(Decimal("1."))
+        )
         item_total = item_net + item_tax
 
         dte_item = DTEItem(
@@ -155,7 +164,7 @@ async def create_dte(
         session.add(dte_item)
 
     await session.commit()
-    
+
     # Re-obtener con items precargados
     stmt = select(DTE).where(DTE.id == dte.id).options(selectinload(DTE.items))
     res = await session.execute(stmt)
@@ -240,7 +249,6 @@ async def emit_dte_native(
     session: SessionDep,
     company_id: TenantDep,
 ) -> dict[str, str]:
-    from sqlalchemy import select
     from app.models import DTE
     from app.workers.tasks.dte_emission import emit_dte_task
 
@@ -250,8 +258,8 @@ async def emit_dte_native(
 
     if dte.status != DTEStatus.DRAFT:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail=f"DTE debe estar en estado DRAFT para emitirse. Estado actual: {dte.status}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"DTE debe estar en estado DRAFT para emitirse. Estado actual: {dte.status}",
         )
 
     # El cambio a "QUEUED" previene que se emita dos veces mientras Celery lo toma
@@ -260,11 +268,8 @@ async def emit_dte_native(
 
     # Disparar Job
     emit_dte_task.delay(str(dte_id))
-    
-    return {
-        "message": "DTE queued for native emission to SII successfully",
-        "status": "QUEUED"
-    }
+
+    return {"message": "DTE queued for native emission to SII successfully", "status": "QUEUED"}
 
 
 @router.get("/{dte_id}/status", response_model=DTEStatusResponse)
@@ -311,6 +316,7 @@ async def generate_dte_pdf(
     company_id: TenantDep,
 ) -> dict[str, str]:
     from app.workers.tasks.dte_tasks import generate_dte_pdf_task
+
     generate_dte_pdf_task.delay(str(dte_id), str(company_id))
     return {"message": "PDF generation queued successfully"}
 
@@ -324,8 +330,8 @@ async def get_dte_pdf(
     session: SessionDep,
     company_id: TenantDep,
 ) -> Any:
-    from fastapi.responses import Response
     from sqlalchemy import select
+
     from app.models import DTE
     from app.services.storage import get_file_storage_service
 
@@ -338,14 +344,15 @@ async def get_dte_pdf(
 
     storage = get_file_storage_service()
     path = f"companies/{company_id}/dtes/{dte_id}/dte_{dte.folio}.pdf"
-    
+
     try:
         from fastapi.responses import StreamingResponse
+
         file_stream = storage.get_file_stream(path)
         return StreamingResponse(
             file_stream,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=dte_{dte.folio}.pdf"}
+            headers={"Content-Disposition": f"attachment; filename=dte_{dte.folio}.pdf"},
         )
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PDF not generated yet")
@@ -363,6 +370,7 @@ async def send_dte_email(
     company_id: TenantDep,
 ) -> dict[str, str]:
     from app.workers.tasks.dte_tasks import send_dte_email_task
+
     send_dte_email_task.delay(str(dte_id), str(company_id), to_email)
     return {"message": "Email sending queued successfully"}
 
@@ -378,6 +386,7 @@ async def retry_dte(
     company_id: TenantDep,
 ) -> dict[str, str]:
     from app.workers.tasks.dte_tasks import send_dte_task
+
     send_dte_task.delay(str(dte_id), str(company_id))
     return {"message": "DTE retry queued successfully"}
 
@@ -392,8 +401,9 @@ async def get_dte_events(
     company_id: TenantDep,
 ) -> Any:
     from sqlalchemy import select
+
     from app.models.audit_log import AuditLog
-    
+
     result = await session.execute(
         select(AuditLog)
         .where(AuditLog.entity_id == dte_id, AuditLog.company_id == company_id)

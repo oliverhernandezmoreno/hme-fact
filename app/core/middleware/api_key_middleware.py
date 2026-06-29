@@ -33,7 +33,10 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
                 if api_key is None:
                     return JSONResponse(
                         status_code=401,
-                        content={"error": "invalid_api_key", "message": "Invalid or expired API Key"},
+                        content={
+                            "error": "invalid_api_key",
+                            "message": "Invalid or expired API Key",
+                        },
                     )
 
                 # Inject company context into request state

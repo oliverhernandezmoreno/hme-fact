@@ -3,23 +3,23 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    api_keys,
     audit_logs,
     auth,
+    caf,
+    certificates,
     companies,
     customers,
     dte,
     health,
-    products,
-    subscriptions,
-    api_keys,
-    rbac,
-    onboarding,
-    integrations,
     inbound_webhooks,
-    certificates,
-    caf,
-    superadmin,
+    integrations,
+    onboarding,
+    products,
+    rbac,
     sii_admin,
+    subscriptions,
+    superadmin,
 )
 
 api_router = APIRouter()

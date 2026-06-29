@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.rbac import Permission, Role
+from app.models.rbac import Role
 from app.repositories.rbac import PermissionRepository, RoleRepository, UserRoleRepository
 
 
@@ -27,13 +27,20 @@ SYSTEM_ROLES: dict[str, dict] = {
         "description": "Company owner — full company access",
         "scope": "company",
         "permissions": [
-            ("companies", "read", "*"), ("companies", "write", "*"),
-            ("users", "read", "*"), ("users", "write", "*"),
-            ("dte", "read", "*"), ("dte", "write", "*"),
-            ("customers", "read", "*"), ("customers", "write", "*"),
-            ("products", "read", "*"), ("products", "write", "*"),
-            ("billing", "read", "*"), ("billing", "write", "*"),
-            ("api_keys", "read", "*"), ("api_keys", "write", "*"),
+            ("companies", "read", "*"),
+            ("companies", "write", "*"),
+            ("users", "read", "*"),
+            ("users", "write", "*"),
+            ("dte", "read", "*"),
+            ("dte", "write", "*"),
+            ("customers", "read", "*"),
+            ("customers", "write", "*"),
+            ("products", "read", "*"),
+            ("products", "write", "*"),
+            ("billing", "read", "*"),
+            ("billing", "write", "*"),
+            ("api_keys", "read", "*"),
+            ("api_keys", "write", "*"),
             ("reports", "read", "*"),
         ],
     },
@@ -41,9 +48,12 @@ SYSTEM_ROLES: dict[str, dict] = {
         "description": "Full DTE + customer access, read billing",
         "scope": "company",
         "permissions": [
-            ("dte", "read", "*"), ("dte", "write", "*"),
-            ("customers", "read", "*"), ("customers", "write", "*"),
-            ("products", "read", "*"), ("products", "write", "*"),
+            ("dte", "read", "*"),
+            ("dte", "write", "*"),
+            ("customers", "read", "*"),
+            ("customers", "write", "*"),
+            ("products", "read", "*"),
+            ("products", "write", "*"),
             ("billing", "read", "*"),
             ("reports", "read", "*"),
         ],
@@ -52,7 +62,8 @@ SYSTEM_ROLES: dict[str, dict] = {
         "description": "DTE emission only",
         "scope": "company",
         "permissions": [
-            ("dte", "write", "create"), ("dte", "read", "*"),
+            ("dte", "write", "create"),
+            ("dte", "read", "*"),
             ("customers", "read", "*"),
             ("products", "read", "*"),
         ],
@@ -72,8 +83,10 @@ SYSTEM_ROLES: dict[str, dict] = {
         "description": "Authenticated via API Key only",
         "scope": "company",
         "permissions": [
-            ("dte", "write", "create"), ("dte", "read", "*"),
-            ("customers", "read", "*"), ("customers", "write", "*"),
+            ("dte", "write", "create"),
+            ("dte", "read", "*"),
+            ("customers", "read", "*"),
+            ("customers", "write", "*"),
             ("products", "read", "*"),
         ],
     },
@@ -90,21 +103,25 @@ class RBACService:
         for role_name, cfg in SYSTEM_ROLES.items():
             role = await self._role_repo.get_by_name(role_name)
             if role is None:
-                role = await self._role_repo.create({
-                    "name": role_name,
-                    "description": cfg["description"],
-                    "scope": cfg["scope"],
-                    "is_system": True,
-                })
+                role = await self._role_repo.create(
+                    {
+                        "name": role_name,
+                        "description": cfg["description"],
+                        "scope": cfg["scope"],
+                        "is_system": True,
+                    }
+                )
 
             for module, action, resource in cfg.get("permissions", []):
                 perm = await self._perm_repo.get_by_module_action(module, action, resource)
                 if perm is None:
-                    perm = await self._perm_repo.create({
-                        "module": module,
-                        "action": action,
-                        "resource": resource,
-                    })
+                    perm = await self._perm_repo.create(
+                        {
+                            "module": module,
+                            "action": action,
+                            "resource": resource,
+                        }
+                    )
                 await self._user_role_repo.session.execute(
                     __import__("sqlalchemy", fromlist=["text"]).text(
                         "INSERT INTO role_permissions (id, role_id, permission_id, created_at, updated_at) "

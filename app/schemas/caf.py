@@ -1,9 +1,10 @@
-from typing import Optional
 from datetime import date
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
 from app.schemas.common import ORMModel
+
 
 class CAFFileResponse(ORMModel):
     id: UUID
@@ -12,9 +13,10 @@ class CAFFileResponse(ORMModel):
     folio_from: int
     folio_to: int
     authorization_date: date
-    current_folio: Optional[int]
-    
+    current_folio: int | None
+
     # We do NOT return the private key in the response
+
 
 class CAFFIleUploadResponse(BaseModel):
     message: str

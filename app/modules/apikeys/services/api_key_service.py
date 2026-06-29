@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.api_key import APIKeyRepository, APIUsageLogRepository
 from app.models.api_key import APIKey
+from app.repositories.api_key import APIKeyRepository, APIUsageLogRepository
 
 
 @dataclass
@@ -44,25 +44,27 @@ class APIKeyService:
         prefix, raw_key, hashed = self._repo.generate_key_pair()
         expires_at = None
         if expires_in_days:
-            expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+            expires_at = datetime.now(UTC) + timedelta(days=expires_in_days)
 
-        api_key = await self._repo.create({
-            "company_id": company_id,
-            "created_by_user_id": created_by_user_id,
-            "name": name,
-            "prefix": prefix,
-            "hashed_key": hashed,
-            "scopes": scopes or list(self.VALID_SCOPES),
-            "expires_at": expires_at,
-            "is_active": True,
-        })
+        api_key = await self._repo.create(
+            {
+                "company_id": company_id,
+                "created_by_user_id": created_by_user_id,
+                "name": name,
+                "prefix": prefix,
+                "hashed_key": hashed,
+                "scopes": scopes or list(self.VALID_SCOPES),
+                "expires_at": expires_at,
+                "is_active": True,
+            }
+        )
         return GeneratedAPIKey(api_key=api_key, raw_key=raw_key)
 
     async def validate(self, raw_key: str) -> APIKey | None:
         api_key = await self._repo.get_by_prefix_and_hash(raw_key)
         if api_key is None:
             return None
-        if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
+        if api_key.expires_at and api_key.expires_at < datetime.now(UTC):
             return None
         await self._repo.touch_last_used(api_key.id)
         return api_key

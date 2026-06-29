@@ -6,15 +6,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.router import api_router
 from app.api.public.v1.router import public_router
+from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware.api_key_middleware import APIKeyMiddleware
+from app.core.middleware.idempotency_middleware import IdempotencyMiddleware
 from app.core.middleware.quota_middleware import QuotaMiddleware
 from app.core.middleware.rate_limit_middleware import RateLimitMiddleware
-from app.core.middleware.idempotency_middleware import IdempotencyMiddleware
 
 
 @asynccontextmanager
@@ -45,10 +45,10 @@ def create_app() -> FastAPI:
         )
 
     # ── Middleware (order matters: last added = first executed) ─────────────
-    app.add_middleware(QuotaMiddleware)       # Blocks DTE emission if quota exceeded
-    app.add_middleware(IdempotencyMiddleware) # Handles idempotency key check
-    app.add_middleware(RateLimitMiddleware)   # Rate limits /public/* by API Key
-    app.add_middleware(APIKeyMiddleware)      # Authenticates /public/* with X-API-Key
+    app.add_middleware(QuotaMiddleware)  # Blocks DTE emission if quota exceeded
+    app.add_middleware(IdempotencyMiddleware)  # Handles idempotency key check
+    app.add_middleware(RateLimitMiddleware)  # Rate limits /public/* by API Key
+    app.add_middleware(APIKeyMiddleware)  # Authenticates /public/* with X-API-Key
 
     # ── Exception handlers ──────────────────────────────────────────────────
     register_exception_handlers(app)

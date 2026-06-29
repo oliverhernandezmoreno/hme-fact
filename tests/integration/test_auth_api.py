@@ -43,7 +43,7 @@ async def test_cookie_authentication(client: AsyncClient, user) -> None:
         data={"username": user.email, "password": "ChangeMe123!"},
     )
     assert login_response.status_code == 200
-    
+
     # Access protected endpoint (without Authorization header)
     protected_response = await client.get("/api/v1/companies")
     assert protected_response.status_code == 200
@@ -56,10 +56,10 @@ async def test_logout_clears_cookie(client: AsyncClient, user) -> None:
         data={"username": user.email, "password": "ChangeMe123!"},
     )
     assert "access_token" in client.cookies
-    
+
     # Logout
     logout_response = await client.post("/api/v1/auth/logout")
     assert logout_response.status_code == 200
-    
+
     # Cookie is deleted/expired
     assert client.cookies.get("access_token") is None

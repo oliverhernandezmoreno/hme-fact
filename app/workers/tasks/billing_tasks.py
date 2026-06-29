@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC
 
 from app.workers.celery_app import celery_app
 
@@ -23,8 +24,8 @@ def renew_expiring_subscriptions(self):
 
     async def _renew():
         from app.db.session import AsyncSessionLocal
-        from app.repositories.subscription_plan import SubscriptionRepository
         from app.modules.billing.services.subscription_service import SubscriptionService
+        from app.repositories.subscription_plan import SubscriptionRepository
 
         async with AsyncSessionLocal() as session:
             repo = SubscriptionRepository(session)
@@ -54,7 +55,9 @@ def compute_saas_metrics_snapshot(self):
         async with AsyncSessionLocal() as session:
             svc = SaasMetricsService(session)
             data = await svc.compute_and_save_snapshot()
-            logger.info(f"SaaS metrics snapshot: MRR={data.get('mrr')}, Companies={data.get('active_companies')}")
+            logger.info(
+                f"SaaS metrics snapshot: MRR={data.get('mrr')}, Companies={data.get('active_companies')}"
+            )
             return data
 
     return _run_async(_compute())
@@ -63,7 +66,9 @@ def compute_saas_metrics_snapshot(self):
 @celery_app.task(name="app.workers.tasks.billing_tasks.reset_monthly_usage_counters", bind=True)
 def reset_monthly_usage_counters(self):
     """Runs on the 1st of each month — ensures new usage_metric rows are ready."""
-    logger.info("Monthly usage reset triggered — new period rows will be created on first DTE emission")
+    logger.info(
+        "Monthly usage reset triggered — new period rows will be created on first DTE emission"
+    )
     return {"status": "ok", "message": "New period rows created on demand"}
 
 
@@ -72,12 +77,19 @@ def send_quota_warning_emails(self):
     """Sends email warnings to companies that have used >80% of their DTE quota."""
 
     async def _send():
-        from app.db.session import AsyncSessionLocal
-        from sqlalchemy import select
-        from app.models.billing import UsageMetric, Subscription, SubscriptionFeature, SubscriptionPlan
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+        from sqlalchemy import select
+
+        from app.db.session import AsyncSessionLocal
+        from app.models.billing import (
+            Subscription,
+            SubscriptionFeature,
+            SubscriptionPlan,
+            UsageMetric,
+        )
+
+        now = datetime.now(UTC)
         warnings_sent = 0
 
         async with AsyncSessionLocal() as session:
@@ -103,7 +115,9 @@ def send_quota_warning_emails(self):
                 pct = dtes_emitted / dte_limit * 100
                 if pct >= 80:
                     # TODO: integrate with email notification service
-                    logger.info(f"Quota warning: company={company_id} used={dtes_emitted}/{dte_limit} ({pct:.1f}%)")
+                    logger.info(
+                        f"Quota warning: company={company_id} used={dtes_emitted}/{dte_limit} ({pct:.1f}%)"
+                    )
                     warnings_sent += 1
 
         logger.info(f"Sent {warnings_sent} quota warning notifications")

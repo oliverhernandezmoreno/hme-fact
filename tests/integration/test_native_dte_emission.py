@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import DTE, Company, Customer, Certificate, CAFFile
+from app.models import DTE, CAFFile, Certificate, Company, Customer
 from app.models.enums import DTEStatus
 
 pytestmark = [pytest.mark.integration]
@@ -17,9 +18,9 @@ async def seeded_certificates_and_cafs(
     company: Company,
 ):
     # Seed mock cert and CAFs for the fixture's company
-    from app.cli.seed_certs_and_caf import generate_mock_pfx, generate_mock_caf_xml
+    from app.cli.seed_certs_and_caf import generate_mock_caf_xml, generate_mock_pfx
     from app.services.certificate_security import CertificateSecurityService
-    
+
     security_service = CertificateSecurityService()
     pfx_bytes, password = generate_mock_pfx()
     metadata = security_service.extract_metadata(pfx_bytes, password)
@@ -35,7 +36,7 @@ async def seeded_certificates_and_cafs(
         encrypted_password=encrypted_password,
         valid_from=metadata["valid_from"],
         valid_until=metadata["valid_until"],
-        is_active=True
+        is_active=True,
     )
     db_session.add(cert)
 
@@ -48,7 +49,7 @@ async def seeded_certificates_and_cafs(
         current_folio=1,
         authorization_date=metadata["valid_from"].date(),
         xml_content=caf_xml,
-        private_key=private_key
+        private_key=private_key,
     )
     db_session.add(caf)
     await db_session.commit()
@@ -103,12 +104,14 @@ async def test_native_dte_emission_flow(
 
     # 3. Now run the async emission logic directly
     from uuid import UUID
+
     from app.workers.tasks.dte_emission import process_dte_emission_async
-    
+
     await process_dte_emission_async(UUID(dte_id))
 
     # 4. Verify database state
     from app.db.session import AsyncSessionLocal
+
     async with AsyncSessionLocal() as session:
         db_dte = await session.get(DTE, dte_id)
         assert db_dte is not None

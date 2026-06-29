@@ -13,23 +13,17 @@ class RoleRepository(BaseRepository[Role]):
     model = Role
 
     async def get_by_name(self, name: str) -> Role | None:
-        result = await self.session.scalars(
-            select(Role).where(Role.name == name)
-        )
+        result = await self.session.scalars(select(Role).where(Role.name == name))
         return result.first()
 
     async def get_all_system(self) -> list[Role]:
-        result = await self.session.scalars(
-            select(Role).where(Role.is_system == True)
-        )
+        result = await self.session.scalars(select(Role).where(Role.is_system == True))
         return list(result)
 
     async def get_with_permissions(self, role_id: uuid.UUID) -> Role | None:
         result = await self.session.scalars(
             select(Role)
-            .options(
-                joinedload(Role.permissions).joinedload(RolePermission.permission)
-            )
+            .options(joinedload(Role.permissions).joinedload(RolePermission.permission))
             .where(Role.id == role_id)
         )
         return result.first()
@@ -71,9 +65,7 @@ class UserRoleRepository(BaseRepository[UserRole]):
             .where(UserRole.user_id == user_id)
         )
         if company_id is not None:
-            query = query.where(
-                (UserRole.company_id == company_id) | (UserRole.company_id == None)
-            )
+            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id == None))
         result = await self.session.scalars(query)
         return list(result.unique())
 
@@ -86,9 +78,7 @@ class UserRoleRepository(BaseRepository[UserRole]):
             .where(UserRole.user_id == user_id, Role.name == role_name)
         )
         if company_id is not None:
-            query = query.where(
-                (UserRole.company_id == company_id) | (UserRole.company_id == None)
-            )
+            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id == None))
         result = await self.session.scalars(query)
         return result.first() is not None
 
@@ -109,9 +99,7 @@ class UserRoleRepository(BaseRepository[UserRole]):
         existing_role = existing.first()
         if existing_role:
             return existing_role
-        return await self.create(
-            {"user_id": user_id, "role_id": role_id, "company_id": company_id}
-        )
+        return await self.create({"user_id": user_id, "role_id": role_id, "company_id": company_id})
 
     async def remove_role(
         self,

@@ -7,8 +7,9 @@ router = APIRouter()
 
 @router.get("", summary="List products (API Key auth)")
 async def list_products(request: Request, offset: int = 0, limit: int = 50):
-    from app.db.session import AsyncSessionLocal
     from sqlalchemy import select
+
+    from app.db.session import AsyncSessionLocal
     from app.models.product import Product
 
     company_id = request.state.company_id
@@ -29,7 +30,9 @@ async def list_products(request: Request, offset: int = 0, limit: int = 50):
 @router.get("/{product_id}", summary="Get product by ID")
 async def get_product(product_id: str, request: Request):
     import uuid
+
     from fastapi import HTTPException
+
     from app.db.session import AsyncSessionLocal
     from app.repositories.product import ProductRepository
 
@@ -43,4 +46,9 @@ async def get_product(product_id: str, request: Request):
         product = await repo.get(pid)
         if product is None or product.company_id != company_id:
             raise HTTPException(status_code=404, detail="Product not found")
-    return {"id": str(product.id), "code": product.code, "name": product.name, "price": float(product.price)}
+    return {
+        "id": str(product.id),
+        "code": product.code,
+        "name": product.name,
+        "price": float(product.price),
+    }

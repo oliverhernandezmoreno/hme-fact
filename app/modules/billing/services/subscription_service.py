@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,7 +67,7 @@ class SubscriptionService:
         if existing and existing.status == "active":
             raise SubscriptionServiceError("Company already has an active subscription")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         period_end = now + timedelta(days=30)
         trial_end = now + timedelta(days=plan.trial_days) if trial and plan.trial_days > 0 else None
 
@@ -122,15 +122,15 @@ class SubscriptionService:
         )
         return updated
 
-    async def cancel(
-        self, company_id: uuid.UUID, *, at_period_end: bool = True
-    ) -> Subscription:
+    async def cancel(self, company_id: uuid.UUID, *, at_period_end: bool = True) -> Subscription:
         sub = await self._sub_repo.get_active(company_id)
         if sub is None:
             raise SubscriptionServiceError("No active subscription found")
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if at_period_end:
-            updated = await self._sub_repo.update(sub, {"cancel_at_period_end": True, "cancelled_at": now})
+            updated = await self._sub_repo.update(
+                sub, {"cancel_at_period_end": True, "cancelled_at": now}
+            )
         else:
             updated = await self._sub_repo.update(sub, {"status": "cancelled", "cancelled_at": now})
         await self._record_billing_event(
@@ -139,7 +139,8 @@ class SubscriptionService:
             event_type="cancellation",
             amount=Decimal("0"),
             currency=sub.plan.currency,
-            description="Subscription cancelled" + (" at period end" if at_period_end else " immediately"),
+            description="Subscription cancelled"
+            + (" at period end" if at_period_end else " immediately"),
         )
         return updated
 
@@ -150,7 +151,7 @@ class SubscriptionService:
         if sub.cancel_at_period_end:
             raise SubscriptionServiceError("Subscription is set to cancel at period end")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         new_end = now + timedelta(days=30)
         updated = await self._sub_repo.update(
             sub,
@@ -171,9 +172,7 @@ class SubscriptionService:
         )
         return updated
 
-    async def change_plan(
-        self, company_id: uuid.UUID, new_plan_code: str
-    ) -> Subscription:
+    async def change_plan(self, company_id: uuid.UUID, new_plan_code: str) -> Subscription:
         sub = await self._sub_repo.get_active(company_id)
         if sub is None:
             raise SubscriptionServiceError("No active subscription found")
@@ -183,11 +182,7 @@ class SubscriptionService:
             raise SubscriptionServiceError(f"Plan '{new_plan_code}' not found")
 
         old_plan = sub.plan
-        event_type = (
-            "upgrade"
-            if float(new_plan.price) > float(old_plan.price)
-            else "downgrade"
-        )
+        event_type = "upgrade" if float(new_plan.price) > float(old_plan.price) else "downgrade"
 
         updated = await self._sub_repo.update(
             sub,

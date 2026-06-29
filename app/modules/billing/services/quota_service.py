@@ -99,7 +99,10 @@ class QuotaService:
         sub = await self._sub_repo.get_active(company_id)
         if sub is None:
             return QuotaResult(
-                allowed=False, used=0, limit=0, feature="api_access",
+                allowed=False,
+                used=0,
+                limit=0,
+                feature="api_access",
                 reason="No active subscription",
             )
         features = sub.plan.features
@@ -115,13 +118,21 @@ class QuotaService:
     async def check_user_quota(self, company_id: uuid.UUID, current_user_count: int) -> QuotaResult:
         sub = await self._sub_repo.get_active(company_id)
         if sub is None:
-            return QuotaResult(allowed=False, used=0, limit=0, feature="users_limit", reason="No active subscription")
+            return QuotaResult(
+                allowed=False,
+                used=0,
+                limit=0,
+                feature="users_limit",
+                reason="No active subscription",
+            )
 
         features = sub.plan.features
         limit = features.users_limit if features else 0
 
         if limit == -1:
-            return QuotaResult(allowed=True, used=current_user_count, limit=limit, feature="users_limit")
+            return QuotaResult(
+                allowed=True, used=current_user_count, limit=limit, feature="users_limit"
+            )
 
         allowed = current_user_count < limit
         return QuotaResult(

@@ -1,9 +1,9 @@
 """Unit tests for SubscriptionService."""
+
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone
 import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -46,11 +46,13 @@ class TestSubscriptionService:
         mock_sub.status = "active"
         mock_sub.plan_id = mock_plan.id
 
-        with patch.object(svc._plan_repo, "get_by_code", return_value=mock_plan), \
-             patch.object(svc._sub_repo, "get_by_company", return_value=None), \
-             patch.object(svc._sub_repo, "create", return_value=mock_sub), \
-             patch.object(svc, "_ensure_usage_metric", return_value=None), \
-             patch.object(svc, "_record_billing_event", return_value=None):
+        with (
+            patch.object(svc._plan_repo, "get_by_code", return_value=mock_plan),
+            patch.object(svc._sub_repo, "get_by_company", return_value=None),
+            patch.object(svc._sub_repo, "create", return_value=mock_sub),
+            patch.object(svc, "_ensure_usage_metric", return_value=None),
+            patch.object(svc, "_record_billing_event", return_value=None),
+        ):
             sub = await svc.activate(company_id, "pyme")
 
         assert sub.status == "active"
@@ -68,8 +70,10 @@ class TestSubscriptionService:
         existing = MagicMock()
         existing.status = "active"
 
-        with patch.object(svc._plan_repo, "get_by_code", return_value=mock_plan), \
-             patch.object(svc._sub_repo, "get_by_company", return_value=existing):
+        with (
+            patch.object(svc._plan_repo, "get_by_code", return_value=mock_plan),
+            patch.object(svc._sub_repo, "get_by_company", return_value=existing),
+        ):
             with pytest.raises(SubscriptionServiceError, match="already has an active"):
                 await svc.activate(company_id, "pyme")
 
@@ -91,9 +95,11 @@ class TestSubscriptionService:
         updated.status = "active"
         updated.cancel_at_period_end = True
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub), \
-             patch.object(svc._sub_repo, "update", return_value=updated), \
-             patch.object(svc, "_record_billing_event", return_value=None):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub),
+            patch.object(svc._sub_repo, "update", return_value=updated),
+            patch.object(svc, "_record_billing_event", return_value=None),
+        ):
             result = await svc.cancel(company_id, at_period_end=True)
 
         assert result.cancel_at_period_end is True
@@ -115,10 +121,12 @@ class TestSubscriptionService:
         updated = MagicMock()
         updated.plan_id = new_plan.id
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub), \
-             patch.object(svc._plan_repo, "get_by_code", return_value=new_plan), \
-             patch.object(svc._sub_repo, "update", return_value=updated), \
-             patch.object(svc, "_record_billing_event", return_value=None):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub),
+            patch.object(svc._plan_repo, "get_by_code", return_value=new_plan),
+            patch.object(svc._sub_repo, "update", return_value=updated),
+            patch.object(svc, "_record_billing_event", return_value=None),
+        ):
             result = await svc.change_plan(company_id, "business")
 
         assert result.plan_id == new_plan.id

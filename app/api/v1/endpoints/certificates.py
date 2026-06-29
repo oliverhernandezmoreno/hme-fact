@@ -1,7 +1,7 @@
-from typing import Any, List
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Header, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db_session
@@ -14,7 +14,7 @@ router = APIRouter()
 security_service = CertificateSecurityService()
 
 
-@router.get("/", response_model=List[CertificateResponse])
+@router.get("/", response_model=list[CertificateResponse])
 async def list_certificates(
     db: AsyncSession = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
@@ -47,8 +47,7 @@ async def upload_certificate(
         metadata = security_service.extract_metadata(pfx_data, password)
     except Exception as e:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Invalid certificate or incorrect password: {str(e)}"
+            status_code=400, detail=f"Invalid certificate or incorrect password: {str(e)}"
         )
 
     # 2. Encrypt sensitive data before storing
@@ -68,6 +67,6 @@ async def upload_certificate(
         encrypted_password=encrypted_password,
         is_active=True,
     )
-    
+
     cert = await crud_certificate.create(db, obj_in=cert_create, company_id=company_id)
     return cert

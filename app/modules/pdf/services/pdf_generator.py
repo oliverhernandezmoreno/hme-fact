@@ -4,7 +4,6 @@ import logging
 import os
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
 from app.models import DTE, DTEXmlType
@@ -24,16 +23,17 @@ DTE_TYPE_NAMES = {
     61: "Nota de Crédito Electrónica",
 }
 
+
 class PdfGeneratorService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.settings = get_settings()
         self.storage = get_file_storage_service()
-        
+
         self.template_dir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
         )
-        
+
         if self.settings.PDF_RENDERER == "xhtml2pdf":
             self.renderer = Xhtml2PdfRenderer(self.template_dir)
         else:
@@ -42,7 +42,7 @@ class PdfGeneratorService:
     async def generate_pdf(self, dte: DTE) -> bytes:
         # Build template data
         await self.session.refresh(dte, ["company", "customer", "items", "xml_documents"])
-        
+
         sii_xml_content = None
         for doc in dte.xml_documents:
             if doc.xml_type == DTEXmlType.SIGNED_DTE:
@@ -84,7 +84,7 @@ class PdfGeneratorService:
                     "unit": getattr(item, "unit", "UN"),
                     "unit_price": item.price,
                     "discount_amount": getattr(item, "discount", 0),
-                    "net_amount": getattr(item, "total", item.price * item.quantity)
+                    "net_amount": getattr(item, "total", item.price * item.quantity),
                 }
                 for item in dte.items
             ],
@@ -95,13 +95,13 @@ class PdfGeneratorService:
                 "total_amount": dte.total_amount,
             },
             "ted_base64": ted_base64,
-            "logo_url": None, # Could be fetched from storage if needed
+            "logo_url": None,  # Could be fetched from storage if needed
         }
 
         pdf_bytes = self.renderer.render(dte, template_data)
-        
+
         # Save to storage
         path = f"companies/{dte.company_id}/dtes/{dte.id}/dte_{dte.folio}.pdf"
         await self.storage.save_file(path, pdf_bytes)
-        
+
         return pdf_bytes

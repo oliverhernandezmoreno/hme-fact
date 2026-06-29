@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import SessionDep
+from app.core.config import get_settings
 from app.schemas.auth import TokenResponse
 from app.services.auth import AuthService
-from app.core.config import get_settings
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def login(
     service = AuthService(session)
     user = await service.authenticate(email=form_data.username, password=form_data.password)
     token = service.create_access_token(user)
-    
+
     settings = get_settings()
     for key in ["access_token", "hme_fact_token", "ohmefact_token"]:
         response.set_cookie(

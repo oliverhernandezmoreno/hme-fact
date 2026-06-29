@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 
@@ -55,11 +55,9 @@ class APIKeyRepository(BaseRepository[APIKey]):
         return list(result)
 
     async def revoke(self, api_key_id: uuid.UUID) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         await self.session.execute(
-            update(APIKey)
-            .where(APIKey.id == api_key_id)
-            .values(revoked_at=now, is_active=False)
+            update(APIKey).where(APIKey.id == api_key_id).values(revoked_at=now, is_active=False)
         )
         await self.session.commit()
 
@@ -67,7 +65,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
         await self.session.execute(
             update(APIKey)
             .where(APIKey.id == api_key_id)
-            .values(last_used_at=datetime.now(timezone.utc))
+            .values(last_used_at=datetime.now(UTC))
         )
         await self.session.commit()
 

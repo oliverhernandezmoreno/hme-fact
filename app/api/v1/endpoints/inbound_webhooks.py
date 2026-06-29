@@ -1,8 +1,10 @@
-import hmac
 import hashlib
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
-from app.api.deps import get_db_session
+import hmac
+
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db_session
 from app.workers.integration_worker import process_inbound_webhook
 
 router = APIRouter()
@@ -18,7 +20,7 @@ async def shopify_webhook(
     connection_id: str,
     request: Request,
     x_shopify_hmac_sha256: str = Header(None),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     body = await request.body()
     # verify signature (mocked secret check, normally fetch connection from DB)
@@ -32,7 +34,7 @@ async def woocommerce_webhook(
     connection_id: str,
     request: Request,
     x_wc_webhook_signature: str = Header(None),
-    db: AsyncSession = Depends(get_db_session)
+    db: AsyncSession = Depends(get_db_session),
 ):
     body = await request.body()
     process_inbound_webhook.delay(str(connection_id), "woocommerce", body.decode("utf-8"))

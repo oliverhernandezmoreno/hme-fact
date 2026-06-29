@@ -3,18 +3,20 @@ CLI commands for seeding valid companies, customers, and products for Chilean in
 Usage:
     python -m app.cli.seed_demo_data
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
-from app.db.session import AsyncSessionLocal
-from app.core.config import get_settings
-from app.models import User, Company, CompanyUser, Customer, Product
-from app.models.enums import UserRole
 from sqlalchemy import select
+
+from app.core.config import get_settings
+from app.db.session import AsyncSessionLocal
+from app.models import Company, CompanyUser, Customer, Product, User
+from app.models.enums import UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ COMPANIES_SEED = [
         "is_active": True,
         "onboarding_step": 10,
         "is_onboarding_completed": True,
-    }
+    },
 ]
 
 CUSTOMERS_SEED = [
@@ -118,7 +120,7 @@ CUSTOMERS_SEED = [
         "comuna": "Santiago",
         "city": "Santiago",
         "is_active": True,
-    }
+    },
 ]
 
 PRODUCTS_SEED = [
@@ -157,8 +159,9 @@ PRODUCTS_SEED = [
         "unit_price": Decimal("35000"),
         "tax_exempt": True,
         "is_active": True,
-    }
+    },
 ]
+
 
 async def seed_demo_data() -> None:
     settings = get_settings()
@@ -167,7 +170,7 @@ async def seed_demo_data() -> None:
         email = settings.FIRST_SUPERUSER_EMAIL
         user_result = await session.execute(select(User).where(User.email == email))
         admin_user = user_result.scalar_one_or_none()
-        
+
         if admin_user is None:
             logger.error(f"❌ User '{email}' not found. Please run the superuser creation first.")
             return
@@ -193,8 +196,7 @@ async def seed_demo_data() -> None:
             # Link user as OWNER if not linked
             member_result = await session.execute(
                 select(CompanyUser).where(
-                    CompanyUser.company_id == company.id,
-                    CompanyUser.user_id == admin_user.id
+                    CompanyUser.company_id == company.id, CompanyUser.user_id == admin_user.id
                 )
             )
             membership = member_result.scalar_one_or_none()
@@ -203,59 +205,69 @@ async def seed_demo_data() -> None:
                     company_id=company.id,
                     user_id=admin_user.id,
                     role=UserRole.OWNER,
-                    is_active=True
+                    is_active=True,
                 )
                 session.add(membership)
-                logger.info(f"🔗 Linked user '{admin_user.email}' as OWNER to '{company.legal_name}'")
+                logger.info(
+                    f"🔗 Linked user '{admin_user.email}' as OWNER to '{company.legal_name}'"
+                )
             else:
                 membership.role = UserRole.OWNER
                 membership.is_active = True
-                logger.info(f"🔗 Verified user '{admin_user.email}' as OWNER to '{company.legal_name}'")
+                logger.info(
+                    f"🔗 Verified user '{admin_user.email}' as OWNER to '{company.legal_name}'"
+                )
 
             # Seed customers for this company
             for customer_data in CUSTOMERS_SEED:
                 cust_rut = customer_data["rut"]
                 cust_result = await session.execute(
                     select(Customer).where(
-                        Customer.company_id == company.id,
-                        Customer.rut == cust_rut
+                        Customer.company_id == company.id, Customer.rut == cust_rut
                     )
                 )
                 customer = cust_result.scalar_one_or_none()
                 if customer is None:
                     customer = Customer(company_id=company.id, **customer_data)
                     session.add(customer)
-                    logger.info(f"   👥 Customer created: {customer_data['legal_name']} for {company.fantasy_name}")
+                    logger.info(
+                        f"   👥 Customer created: {customer_data['legal_name']} for {company.fantasy_name}"
+                    )
                 else:
                     for key, val in customer_data.items():
                         setattr(customer, key, val)
-                    logger.info(f"   👥 Customer updated: {customer_data['legal_name']} for {company.fantasy_name}")
+                    logger.info(
+                        f"   👥 Customer updated: {customer_data['legal_name']} for {company.fantasy_name}"
+                    )
 
             # Seed products for this company
             for product_data in PRODUCTS_SEED:
                 sku = product_data["sku"]
                 prod_result = await session.execute(
-                    select(Product).where(
-                        Product.company_id == company.id,
-                        Product.sku == sku
-                    )
+                    select(Product).where(Product.company_id == company.id, Product.sku == sku)
                 )
                 product = prod_result.scalar_one_or_none()
                 if product is None:
                     product = Product(company_id=company.id, **product_data)
                     session.add(product)
-                    logger.info(f"   📦 Product created: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}")
+                    logger.info(
+                        f"   📦 Product created: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}"
+                    )
                 else:
                     for key, val in product_data.items():
                         setattr(product, key, val)
-                    logger.info(f"   📦 Product updated: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}")
+                    logger.info(
+                        f"   📦 Product updated: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}"
+                    )
 
         await session.commit()
         logger.info("🎉 Database seeding completed successfully!")
 
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     asyncio.run(seed_demo_data())
+
 
 if __name__ == "__main__":
     main()

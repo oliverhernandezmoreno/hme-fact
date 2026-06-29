@@ -1,8 +1,9 @@
 """Unit tests for QuotaService."""
+
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -69,13 +70,17 @@ class TestQuotaService:
         assert result.reason == "No active subscription"
 
     @pytest.mark.asyncio
-    async def test_check_dte_quota_within_limit(self, mock_session, company_id, mock_sub_with_features):
+    async def test_check_dte_quota_within_limit(
+        self, mock_session, company_id, mock_sub_with_features
+    ):
         svc = QuotaService(mock_session)
         mock_metric = MagicMock()
         mock_metric.dtes_emitted = 30
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features), \
-             patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features),
+            patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric),
+        ):
             result = await svc.check_dte_quota(company_id)
 
         assert result.allowed is True
@@ -89,22 +94,28 @@ class TestQuotaService:
         mock_metric = MagicMock()
         mock_metric.dtes_emitted = 100  # At limit
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features), \
-             patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features),
+            patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric),
+        ):
             result = await svc.check_dte_quota(company_id)
 
         assert result.allowed is False
         assert "exceeded" in result.reason.lower()
 
     @pytest.mark.asyncio
-    async def test_check_dte_quota_unlimited(self, mock_session, company_id, mock_sub_with_features):
+    async def test_check_dte_quota_unlimited(
+        self, mock_session, company_id, mock_sub_with_features
+    ):
         mock_sub_with_features.plan.features.dte_limit = -1
         svc = QuotaService(mock_session)
         mock_metric = MagicMock()
         mock_metric.dtes_emitted = 50000
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features), \
-             patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features),
+            patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric),
+        ):
             result = await svc.check_dte_quota(company_id)
 
         assert result.allowed is True
@@ -132,8 +143,10 @@ class TestQuotaService:
         mock_metric.period_month = 6
         mock_metric.period_year = 2026
 
-        with patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features), \
-             patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric):
+        with (
+            patch.object(svc._sub_repo, "get_active", return_value=mock_sub_with_features),
+            patch.object(svc._usage_repo, "get_or_create_current", return_value=mock_metric),
+        ):
             summary = await svc.get_usage_summary(company_id)
 
         assert summary is not None

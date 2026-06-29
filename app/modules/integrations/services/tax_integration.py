@@ -314,9 +314,7 @@ class TaxIntegrationService:
 
     def _track_id_from_payload(self, payload: dict[str, Any]) -> str | None:
         value = (
-            payload.get("track_id")
-            or payload.get("external_track_id")
-            or payload.get("trackId")
+            payload.get("track_id") or payload.get("external_track_id") or payload.get("trackId")
         )
         return str(value) if value is not None else None
 

@@ -1,7 +1,8 @@
-from typing import Any, List
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, Header, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db_session
 from app.crud.crud_integration import integration_connection, webhook_subscription
@@ -13,12 +14,11 @@ from app.schemas.integration import (
     WebhookSubscriptionCreate,
     WebhookSubscriptionResponse,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
 
-@router.get("/connections", response_model=List[IntegrationConnectionResponse])
+@router.get("/connections", response_model=list[IntegrationConnectionResponse])
 async def list_connections(
     db: AsyncSession = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
@@ -56,7 +56,7 @@ async def update_connection(
     return await integration_connection.update(db, db_obj=conn, obj_in=obj_in)
 
 
-@router.get("/webhooks", response_model=List[WebhookSubscriptionResponse])
+@router.get("/webhooks", response_model=list[WebhookSubscriptionResponse])
 async def list_webhooks(
     db: AsyncSession = Depends(get_db_session),
     current_user: User = Depends(get_current_user),

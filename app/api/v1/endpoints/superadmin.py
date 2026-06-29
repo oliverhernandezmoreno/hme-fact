@@ -7,7 +7,10 @@ from pydantic import BaseModel
 
 from app.api.deps import CurrentUserDep, SessionDep
 from app.core.deps.rbac import SuperAdminRequired
-from app.modules.billing.services.subscription_service import SubscriptionService, SubscriptionServiceError
+from app.modules.billing.services.subscription_service import (
+    SubscriptionService,
+    SubscriptionServiceError,
+)
 from app.modules.metrics.services.saas_metrics_service import SaasMetricsService
 
 router = APIRouter()
@@ -24,6 +27,7 @@ class SuspendRequest(BaseModel):
 
 # ── Companies ─────────────────────────────────────────────────────────────────
 
+
 @router.get("/companies", dependencies=[SuperAdminRequired], summary="List all companies")
 async def list_all_companies(
     session: SessionDep,
@@ -33,7 +37,9 @@ async def list_all_companies(
     status_filter: str | None = None,
 ):
     from sqlalchemy import select
+
     from app.models.company import Company
+
     q = select(Company).offset(offset).limit(limit).order_by(Company.created_at.desc())
     if status_filter == "active":
         q = q.where(Company.is_active == True)
@@ -66,6 +72,7 @@ async def suspend_company(
         sub = await svc.suspend(company_id, reason=body.reason)
         # Also deactivate the company
         from app.repositories.company import CompanyRepository
+
         company_repo = CompanyRepository(session)
         company = await company_repo.get(company_id)
         if company:
@@ -82,6 +89,7 @@ async def activate_company(
     current_user: CurrentUserDep,
 ):
     from app.repositories.company import CompanyRepository
+
     company_repo = CompanyRepository(session)
     company = await company_repo.get(company_id)
     if company is None:
@@ -92,6 +100,7 @@ async def activate_company(
 
 # ── Subscriptions ─────────────────────────────────────────────────────────────
 
+
 @router.get("/subscriptions", dependencies=[SuperAdminRequired], summary="List all subscriptions")
 async def list_all_subscriptions(
     session: SessionDep,
@@ -100,6 +109,7 @@ async def list_all_subscriptions(
     limit: int = Query(50, ge=1, le=200),
 ):
     from app.repositories.subscription_plan import SubscriptionRepository
+
     repo = SubscriptionRepository(session)
     subs = await repo.get_all_with_plan(offset=offset, limit=limit)
     return [
@@ -116,7 +126,9 @@ async def list_all_subscriptions(
     ]
 
 
-@router.post("/subscriptions", dependencies=[SuperAdminRequired], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/subscriptions", dependencies=[SuperAdminRequired], status_code=status.HTTP_201_CREATED
+)
 async def assign_plan(
     body: AssignPlanRequest,
     session: SessionDep,
@@ -132,13 +144,16 @@ async def assign_plan(
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
 
+
 @router.get("/metrics", dependencies=[SuperAdminRequired], summary="Global SaaS metrics dashboard")
 async def get_global_metrics(session: SessionDep, current_user: CurrentUserDep):
     svc = SaasMetricsService(session)
     return await svc.get_dashboard_summary()
 
 
-@router.post("/metrics/refresh", dependencies=[SuperAdminRequired], summary="Force refresh metrics snapshot")
+@router.post(
+    "/metrics/refresh", dependencies=[SuperAdminRequired], summary="Force refresh metrics snapshot"
+)
 async def refresh_metrics(session: SessionDep, current_user: CurrentUserDep):
     svc = SaasMetricsService(session)
     data = await svc.compute_and_save_snapshot()
@@ -146,6 +161,7 @@ async def refresh_metrics(session: SessionDep, current_user: CurrentUserDep):
 
 
 # ── Users ─────────────────────────────────────────────────────────────────────
+
 
 @router.get("/users", dependencies=[SuperAdminRequired], summary="List all platform users")
 async def list_all_users(
@@ -155,7 +171,9 @@ async def list_all_users(
     limit: int = Query(50, ge=1, le=200),
 ):
     from sqlalchemy import select
+
     from app.models.user import User
+
     result = await session.scalars(
         select(User).offset(offset).limit(limit).order_by(User.created_at.desc())
     )

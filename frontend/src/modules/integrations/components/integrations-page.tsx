@@ -65,7 +65,7 @@ export function IntegrationsPage() {
                     <Icon className="h-6 w-6 text-primary" />
                   </div>
                   {integration.status === "active" && <Badge variant="success">Conectado</Badge>}
-                  {integration.status === "inactive" && <Badge variant="outline">Desconectado</Badge>}
+                  {integration.status === "inactive" && <Badge variant="default">Desconectado</Badge>}
                   {integration.status === "coming_soon" && <Badge variant="info">Próximamente</Badge>}
                 </div>
                 <CardTitle className="mt-4">{integration.name}</CardTitle>
