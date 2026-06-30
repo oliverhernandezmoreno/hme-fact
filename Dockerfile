@@ -27,6 +27,7 @@ RUN pip install --upgrade pip \
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY scripts ./scripts
 
 RUN adduser --disabled-password --gecos "" appuser \
     && chown -R appuser:appuser /app
