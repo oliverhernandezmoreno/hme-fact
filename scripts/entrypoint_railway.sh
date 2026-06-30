@@ -4,6 +4,10 @@
 echo "Aplicando migraciones con Alembic..."
 alembic upgrade head
 
+# Crear superusuario inicial (si no existe)
+echo "Creando superusuario administrador..."
+python -m app.cli.create_superuser
+
 # Iniciar Celery Worker en segundo plano
 echo "Iniciando Celery Worker..."
 celery -A app.workers.celery_app worker --loglevel=info &
