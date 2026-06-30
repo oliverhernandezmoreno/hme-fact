@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { queryKeys } from "@/services/query-keys";
 
-import { createDTE, getDTEStatus, listDTE, sendDTE } from "../services/dte.service";
+import { createDTE, getDTEStatus, listDTE, sendDTE, downloadDTEPdf } from "../services/dte.service";
 
 export function useDTEList() {
   return useQuery({
@@ -41,5 +41,12 @@ export function useDTEMutations() {
     }
   });
 
-  return { create, send, refreshStatus };
+  const downloadPdf = useMutation({
+    mutationFn: ({ id, folio }: { id: string; folio: number }) => downloadDTEPdf(id, folio),
+    onError: (err: any) => {
+      toast.error(err.message || "Error al descargar el PDF");
+    }
+  });
+
+  return { create, send, refreshStatus, downloadPdf };
 }

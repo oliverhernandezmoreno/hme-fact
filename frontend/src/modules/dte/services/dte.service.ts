@@ -56,3 +56,26 @@ export async function getDTEStatus(id: string): Promise<DTEStatusResponse> {
   return response.data;
 }
 
+export async function downloadDTEPdf(id: string, folio: number): Promise<void> {
+  if (isMockMode) {
+    await delay();
+    const link = document.createElement("a");
+    link.href = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+    link.target = "_blank";
+    link.download = `dte_${folio}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return;
+  }
+  const response = await apiClient.get(`/dte/${id}/pdf`, { responseType: "blob" });
+  const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `dte_${folio}.pdf`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+

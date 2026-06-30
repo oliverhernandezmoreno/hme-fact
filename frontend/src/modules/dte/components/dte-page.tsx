@@ -19,8 +19,7 @@ import { DTEIssueForm } from "./dte-issue-form";
 export function DTEPage() {
   const [open, setOpen] = useState(false);
   const { data = [], isLoading } = useDTEList();
-  const { send, refreshStatus } = useDTEMutations();
-
+  const { send, refreshStatus, downloadPdf } = useDTEMutations();
   const contingencyDtes = data.filter((d) => d.status === "contingency");
   const hasContingency = contingencyDtes.length > 0;
 
@@ -36,8 +35,20 @@ export function DTEPage() {
       cell: ({ row }) => {
         const dte = row.original;
         const isContingency = dte.status === "contingency";
+        const hasPdf = ["generated", "sent", "accepted", "rejected", "contingency"].includes(dte.status);
         return (
           <div className="flex gap-2">
+            {hasPdf && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadPdf.mutate({ id: dte.id, folio: dte.folio })}
+                title="Descargar PDF"
+                disabled={downloadPdf.isPending}
+              >
+                <FileText className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              </Button>
+            )}
             <Button
               variant={isContingency ? "default" : "outline"}
               size="sm"
