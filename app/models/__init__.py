@@ -52,6 +52,7 @@ __all__ = [
     "Company",
     "CompanyUser",
     "Customer",
+    "DynamicUserRole",
     "DTE",
     "DTEEvent",
     "DTEEventType",

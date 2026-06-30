@@ -23,7 +23,7 @@ class SubscriptionPlanRepository(BaseRepository[SubscriptionPlan]):
         result = await self.session.scalars(
             select(SubscriptionPlan)
             .options(joinedload(SubscriptionPlan.features))
-            .where(SubscriptionPlan.is_active == True, SubscriptionPlan.is_public == True)
+            .where(SubscriptionPlan.is_active, SubscriptionPlan.is_public)
             .order_by(SubscriptionPlan.sort_order)
         )
         return list(result.unique())
@@ -68,7 +68,7 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             select(Subscription).where(
                 Subscription.status == "active",
                 Subscription.current_period_end <= cutoff,
-                Subscription.cancel_at_period_end == False,
+                not Subscription.cancel_at_period_end,
             )
         )
         return list(result)

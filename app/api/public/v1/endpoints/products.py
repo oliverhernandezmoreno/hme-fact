@@ -42,7 +42,7 @@ async def get_product(product_id: str, request: Request):
         try:
             pid = uuid.UUID(product_id)
         except ValueError:
-            raise HTTPException(status_code=422, detail="Invalid product ID")
+            raise HTTPException(status_code=422, detail="Invalid product ID") from None
         product = await repo.get(pid)
         if product is None or product.company_id != company_id:
             raise HTTPException(status_code=404, detail="Product not found")

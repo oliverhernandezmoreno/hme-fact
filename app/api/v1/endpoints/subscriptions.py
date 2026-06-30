@@ -173,7 +173,7 @@ async def activate_subscription(
         sub = await svc.activate(company_id, body.plan_code, trial=body.trial)
         return {"id": str(sub.id), "status": sub.status, "plan_id": str(sub.plan_id)}
     except SubscriptionServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 @router.put("/change-plan", summary="Change subscription plan (upgrade or downgrade)")
@@ -188,7 +188,7 @@ async def change_plan(
         sub = await svc.change_plan(company_id, body.plan_code)
         return {"id": str(sub.id), "status": sub.status, "plan_id": str(sub.plan_id)}
     except SubscriptionServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 @router.post("/cancel", summary="Cancel subscription")
@@ -207,7 +207,7 @@ async def cancel_subscription(
             "cancel_at_period_end": sub.cancel_at_period_end,
         }
     except SubscriptionServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 @router.get("/billing-events", summary="List billing events for company")

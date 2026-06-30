@@ -48,7 +48,7 @@ async def upload_certificate(
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Invalid certificate or incorrect password: {str(e)}"
-        )
+        ) from e
 
     # 2. Encrypt sensitive data before storing
     encrypted_pfx = security_service.encrypt_data(pfx_data)

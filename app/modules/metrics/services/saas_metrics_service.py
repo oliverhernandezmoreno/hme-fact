@@ -35,7 +35,7 @@ class SaasMetricsService:
 
         # --- Users ---
         total_users_result = await self._session.execute(
-            select(func.count(User.id)).where(User.is_active == True)
+            select(func.count(User.id)).where(User.is_active)
         )
         total_users = total_users_result.scalar_one()
 
@@ -87,7 +87,7 @@ class SaasMetricsService:
             "extra": {},
         }
 
-        snapshot = await self._repo.upsert(today, data)
+        await self._repo.upsert(today, data)
         return data
 
     async def get_dashboard_summary(self) -> dict:
@@ -132,7 +132,7 @@ class SaasMetricsService:
         result = await self._session.execute(
             select(func.count(Company.id)).where(
                 Company.created_at >= first_of_month,
-                Company.is_active == True,
+                Company.is_active,
             )
         )
         return result.scalar_one()

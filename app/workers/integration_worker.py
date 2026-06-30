@@ -13,7 +13,7 @@ def process_inbound_webhook(self, connection_id: str, provider: str, raw_payload
     payload = json.loads(raw_payload)
     try:
         if provider == "shopify":
-            order = OrderToDTEMapper.map_shopify_order(payload)
+            OrderToDTEMapper.map_shopify_order(payload)
         elif provider == "woocommerce":
             pass  # map woocommerce
 
@@ -54,7 +54,7 @@ def send_outbound_webhook(self, subscription_id: str, event_type: str, payload: 
             result = await session.execute(
                 select(WebhookSubscription).where(
                     WebhookSubscription.id == uuid.UUID(subscription_id),
-                    WebhookSubscription.is_active == True,
+                    WebhookSubscription.is_active,
                 )
             )
             sub = result.scalar_one_or_none()

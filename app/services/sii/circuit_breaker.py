@@ -81,7 +81,8 @@ class SIICircuitBreaker:
             failures = await r.incr(self.failure_count_key)
             if state == "HALF_OPEN" or failures >= self.failure_threshold:
                 logger.warning(
-                    f"Circuit Breaker threshold reached or failure in HALF_OPEN. Opening circuit. Failures: {failures}"
+                    f"Circuit Breaker threshold reached or failure in HALF_OPEN. "
+                    f"Opening circuit. Failures: {failures}"
                 )
                 await r.set(self.state_key, "OPEN")
                 await r.set(self.last_state_change_key, time.time())

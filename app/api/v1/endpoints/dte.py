@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Response, status
 
@@ -82,7 +83,10 @@ async def create_dte(
     if not caf_file:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"No hay folios disponibles para el tipo de documento {payload.dte_type}. Por favor, suba un archivo CAF válido.",
+            detail=(
+                f"No hay folios disponibles para el tipo de documento {payload.dte_type}. "
+                "Por favor, suba un archivo CAF válido."
+            ),
         )
 
     folio = caf_file.current_folio
@@ -90,7 +94,7 @@ async def create_dte(
 
     # 2. Buscar certificado digital activo para la empresa si existe
     cert_stmt = select(Certificate).where(
-        Certificate.company_id == company_id, Certificate.is_active == True
+        Certificate.company_id == company_id, Certificate.is_active
     )
     cert_result = await session.execute(cert_stmt)
     certificate = cert_result.scalar_one_or_none()
@@ -354,8 +358,10 @@ async def get_dte_pdf(
             media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename=dte_{dte.folio}.pdf"},
         )
-    except FileNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PDF not generated yet")
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="PDF not generated yet"
+        ) from exc
 
 
 @router.post(

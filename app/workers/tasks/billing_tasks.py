@@ -20,7 +20,10 @@ def _run_async(coro):
 
 @celery_app.task(name="app.workers.tasks.billing_tasks.renew_expiring_subscriptions", bind=True)
 def renew_expiring_subscriptions(self):
-    """Renews active subscriptions that expire within 48 hours (if cancel_at_period_end is False)."""
+    """
+    Renews active subscriptions that expire within 48 hours
+    (if cancel_at_period_end is False).
+    """
 
     async def _renew():
         from app.db.session import AsyncSessionLocal
@@ -56,7 +59,8 @@ def compute_saas_metrics_snapshot(self):
             svc = SaasMetricsService(session)
             data = await svc.compute_and_save_snapshot()
             logger.info(
-                f"SaaS metrics snapshot: MRR={data.get('mrr')}, Companies={data.get('active_companies')}"
+                f"SaaS metrics snapshot: MRR={data.get('mrr')}, "
+                f"Companies={data.get('active_companies')}"
             )
             return data
 
@@ -116,7 +120,8 @@ def send_quota_warning_emails(self):
                 if pct >= 80:
                     # TODO: integrate with email notification service
                     logger.info(
-                        f"Quota warning: company={company_id} used={dtes_emitted}/{dte_limit} ({pct:.1f}%)"
+                        f"Quota warning: company={company_id} "
+                        f"used={dtes_emitted}/{dte_limit} ({pct:.1f}%)"
                     )
                     warnings_sent += 1
 

@@ -53,7 +53,7 @@ async def process_dte_emission_async(dte_id: UUID) -> str:
             # 2. Fetch Active Digital Certificate
             cert_result = await db.execute(
                 select(Certificate).where(
-                    Certificate.company_id == company.id, Certificate.is_active == True
+                    Certificate.company_id == company.id, Certificate.is_active
                 )
             )
             certificate = cert_result.scalars().first()
@@ -187,7 +187,8 @@ async def process_dte_emission_async(dte_id: UUID) -> str:
             sii_client = SIIWebServicesClient(environment="certification")
             token = await sii_client.get_token(pfx_data, pfx_password)
 
-            # Assuming certificate owner RUT is needed (usually extracted from Cert, hardcoded for now)
+            # Assuming certificate owner RUT is needed (usually extracted from Cert,
+            # hardcoded for now)
             # In a real scenario, the RUT owner is stored when uploading the cert
             cert_owner_rut = company.rut
 
@@ -240,7 +241,8 @@ async def process_dte_emission_async(dte_id: UUID) -> str:
                 or isinstance(e, httpx.RequestError)
             ):
                 logger.warning(
-                    f"SII Web Service failure or circuit open. Moving DTE {dte_id} to contingency state. Error: {e}"
+                    f"SII Web Service failure or circuit open. Moving DTE {dte_id} "
+                    f"to contingency state. Error: {e}"
                 )
                 dte.status = DTEStatus.CONTINGENCY
                 if "signed_xml_bytes" in locals():
@@ -272,7 +274,8 @@ def emit_dte_task(self, dte_id: str):
         track_id = async_to_sync(process_dte_emission_async)(UUID(dte_id))
         if track_id == "contingency":
             logger.info(
-                f"DTE {dte_id} was successfully moved to CONTINGENCY status due to SII service outage."
+                f"DTE {dte_id} was successfully moved to CONTINGENCY status "
+                f"due to SII service outage."
             )
         return track_id
     except Exception as exc:

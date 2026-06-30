@@ -25,10 +25,12 @@ async def upload_caf_file(
 ) -> Any:
     """
     Subir y parsear un archivo CAF (Código de Autorización de Folios).
-    Extrae la llave privada, rangos de folios y almacena el contenido XML listo para inyectarse en los DTEs.
+    Extrae la llave privada, rangos de folios y almacena el contenido XML
+    listo para inyectarse en los DTEs.
     """
 
-    # Check that company exists and belongs to user (Assuming RBAC checks are handled in deps or middleware, but we double check)
+    # Check that company exists and belongs to user
+    # (Assuming RBAC checks are handled in deps or middleware, but we double check)
     company = await db.get(Company, company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -41,7 +43,7 @@ async def upload_caf_file(
     try:
         parsed_data = CAFParser.parse(content)
     except CAFParserError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     # Verify the RUT matches the company RUT
     # This requires company.rut to be formatted identically, so we do a simple check
@@ -50,7 +52,10 @@ async def upload_caf_file(
     ].replace(".", "").replace("-", ""):
         raise HTTPException(
             status_code=400,
-            detail=f"El RUT del CAF ({parsed_data['rut_emisor']}) no coincide con el RUT de la empresa ({company.rut})",
+            detail=(
+                f"El RUT del CAF ({parsed_data['rut_emisor']}) no coincide "
+                f"con el RUT de la empresa ({company.rut})"
+            ),
         )
 
     # Check if this exact range already exists

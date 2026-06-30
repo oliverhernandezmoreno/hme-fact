@@ -55,7 +55,8 @@ def is_business_rut(rut_str: str) -> bool:
     num_part = cleaned.split("-")[0]
     try:
         num = int(num_part)
-        # Business RUTs (personas jurídicas) in Chile are typically between 50,000,000 and 99,999,999
+        # Business RUTs (personas jurídicas) in Chile are typically
+        # between 50,000,000 and 99,999,999
         return 50000000 <= num <= 99999999
     except ValueError:
         return False

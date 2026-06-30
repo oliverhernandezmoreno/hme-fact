@@ -65,7 +65,7 @@ async def assign_role(
         await svc.assign_role(user_id, body.role_name, company_id)
         return {"message": f"Role '{body.role_name}' assigned to user {user_id}"}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.delete("/users/{user_id}/roles/{role_name}", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,4 +80,4 @@ async def remove_role(
     try:
         await svc.remove_role(user_id, role_name, company_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e

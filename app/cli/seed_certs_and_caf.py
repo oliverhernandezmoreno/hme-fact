@@ -49,9 +49,7 @@ def generate_mock_pfx() -> tuple[bytes, str]:
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1))
-        .not_valid_after(
-            datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=365)
-        )
+        .not_valid_after(datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=365))
         .sign(private_key, hashes.SHA256())
     )
 
@@ -125,7 +123,7 @@ async def seed_certs_and_caf() -> None:
             # Check if active cert already exists
             cert_res = await session.execute(
                 select(Certificate).where(
-                    Certificate.company_id == company.id, Certificate.is_active == True
+                    Certificate.company_id == company.id, Certificate.is_active
                 )
             )
             cert = cert_res.scalar_one_or_none()

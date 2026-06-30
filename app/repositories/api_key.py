@@ -38,8 +38,8 @@ class APIKeyRepository(BaseRepository[APIKey]):
             select(APIKey).where(
                 APIKey.prefix == prefix,
                 APIKey.hashed_key == hashed,
-                APIKey.is_active == True,
-                APIKey.revoked_at == None,
+                APIKey.is_active,
+                APIKey.revoked_at is None,
             )
         )
         return result.first()
@@ -48,8 +48,8 @@ class APIKeyRepository(BaseRepository[APIKey]):
         result = await self.session.scalars(
             select(APIKey).where(
                 APIKey.company_id == company_id,
-                APIKey.is_active == True,
-                APIKey.revoked_at == None,
+                APIKey.is_active,
+                APIKey.revoked_at is None,
             )
         )
         return list(result)
@@ -63,9 +63,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
 
     async def touch_last_used(self, api_key_id: uuid.UUID) -> None:
         await self.session.execute(
-            update(APIKey)
-            .where(APIKey.id == api_key_id)
-            .values(last_used_at=datetime.now(UTC))
+            update(APIKey).where(APIKey.id == api_key_id).values(last_used_at=datetime.now(UTC))
         )
         await self.session.commit()
 

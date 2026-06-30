@@ -42,9 +42,9 @@ async def list_all_companies(
 
     q = select(Company).offset(offset).limit(limit).order_by(Company.created_at.desc())
     if status_filter == "active":
-        q = q.where(Company.is_active == True)
+        q = q.where(Company.is_active)
     elif status_filter == "inactive":
-        q = q.where(Company.is_active == False)
+        q = q.where(not Company.is_active)
     result = await session.scalars(q)
     companies = list(result)
     return [
@@ -79,7 +79,7 @@ async def suspend_company(
             await company_repo.update(company, {"is_active": False})
         return {"company_id": str(company_id), "subscription_status": sub.status}
     except SubscriptionServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 @router.put("/companies/{company_id}/activate", dependencies=[SuperAdminRequired])
@@ -139,7 +139,7 @@ async def assign_plan(
         sub = await svc.activate(body.company_id, body.plan_code)
         return {"id": str(sub.id), "status": sub.status}
     except SubscriptionServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 # ── Metrics ───────────────────────────────────────────────────────────────────

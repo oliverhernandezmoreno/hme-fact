@@ -11,7 +11,7 @@ from app.models.enums import DTEStatus
 def test_emit_dte_task_success(mock_process, mock_async_to_sync):
     # Arrangement
     mock_async_to_sync.return_value = lambda *args: "TRACKID_123"
-    dte_id_str = str(uuid4())
+    str(uuid4())
 
     # Action
     # The bind=True passes 'self' to the task, we mock it via a magic mock if called directly,
@@ -51,7 +51,11 @@ async def test_process_dte_emission_async(
     mock_dte.company.giro = "Servicios Informaticos"
     mock_dte.company.address = "Alameda 123"
     mock_dte.company.comuna = "Santiago"
-    mock_dte.caf_file.xml_content = "<CAF><DA><RE>76123456-7</RE><RS>TechCorp Chile SpA</RS><TD>33</TD><RNG><D>1</D><H>100</H></RNG><FA>2026-06-26</FA></DA><RSASK>KEY</RSASK></CAF>"
+    mock_dte.caf_file.xml_content = (
+        "<CAF><DA><RE>76123456-7</RE><RS>TechCorp Chile SpA</RS>"
+        "<TD>33</TD><RNG><D>1</D><H>100</H></RNG>"
+        "<FA>2026-06-26</FA></DA><RSASK>KEY</RSASK></CAF>"
+    )
     mock_dte.caf_file.private_key = "PRIVATE_KEY"
     mock_dte.exempt_amount = Decimal("0.00")
     mock_dte.net_amount = Decimal("1000.00")
@@ -147,7 +151,11 @@ async def test_process_dte_emission_contingency_on_circuit_breaker_open(
     mock_dte.company.giro = "Servicios Informaticos"
     mock_dte.company.address = "Alameda 123"
     mock_dte.company.comuna = "Santiago"
-    mock_dte.caf_file.xml_content = "<CAF><DA><RE>76123456-7</RE><RS>TechCorp Chile SpA</RS><TD>33</TD><RNG><D>1</D><H>100</H></RNG><FA>2026-06-26</FA></DA><RSASK>KEY</RSASK></CAF>"
+    mock_dte.caf_file.xml_content = (
+        "<CAF><DA><RE>76123456-7</RE><RS>TechCorp Chile SpA</RS>"
+        "<TD>33</TD><RNG><D>1</D><H>100</H></RNG>"
+        "<FA>2026-06-26</FA></DA><RSASK>KEY</RSASK></CAF>"
+    )
     mock_dte.caf_file.private_key = "PRIVATE_KEY"
     mock_dte.exempt_amount = Decimal("0.00")
     mock_dte.net_amount = Decimal("1000.00")

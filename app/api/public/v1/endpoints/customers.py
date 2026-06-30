@@ -67,7 +67,7 @@ async def get_customer(customer_id: str, request: Request):
         try:
             cid = uuid.UUID(customer_id)
         except ValueError:
-            raise HTTPException(status_code=422, detail="Invalid customer ID")
+            raise HTTPException(status_code=422, detail="Invalid customer ID") from None
         customer = await repo.get(cid)
         if customer is None or customer.company_id != company_id:
             raise HTTPException(status_code=404, detail="Customer not found")

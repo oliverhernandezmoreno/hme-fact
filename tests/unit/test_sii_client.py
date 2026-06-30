@@ -98,7 +98,8 @@ async def test_get_seed_success():
    </soapenv:Body>
 </soapenv:Envelope>"""
 
-    # Mock client.circuit_breaker.call to return response content directly to avoid HTTP network call
+    # Mock client.circuit_breaker.call to return response content directly
+    # to avoid HTTP network call
     async def mock_cb_call(func, *args, **kwargs):
         return soap_resp.encode("utf-8")
 

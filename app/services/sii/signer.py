@@ -14,7 +14,8 @@ from lxml import etree
 
 class SIISigner:
     """
-    Handles XML-DSig and TED RSA-SHA1 signing for Chilean SII format using `xmlsec` and `cryptography`.
+    Handles XML-DSig and TED RSA-SHA1 signing for Chilean SII format
+    using `xmlsec` and `cryptography`.
     """
 
     @staticmethod
@@ -43,7 +44,7 @@ class SIISigner:
         Signs the <DD> (Datos del Documento) string for the Timbre Electrónico (TED)
         using RSA-SHA1 and returns the base64 encoded signature.
         """
-        key = xmlsec.Key.from_memory(private_key_pem, xmlsec.KeyFormat.PEM, None)
+        xmlsec.Key.from_memory(private_key_pem, xmlsec.KeyFormat.PEM, None)
 
         # SII requires RSA-SHA1 for the TED signature
         # We use cryptography directly here for the raw string signing

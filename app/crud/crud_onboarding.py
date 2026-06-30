@@ -15,7 +15,7 @@ class CRUDOnboarding:
             select(OnboardingWorkflow)
             .where(
                 OnboardingWorkflow.country_code == country_code,
-                OnboardingWorkflow.is_active == True,
+                OnboardingWorkflow.is_active,
             )
             .options(selectinload(OnboardingWorkflow.step_definitions))
         )

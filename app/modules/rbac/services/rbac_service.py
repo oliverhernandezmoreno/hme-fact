@@ -122,11 +122,14 @@ class RBACService:
                             "resource": resource,
                         }
                     )
+                sql = (
+                    "INSERT INTO role_permissions "
+                    "(id, role_id, permission_id, created_at, updated_at) "
+                    "VALUES (gen_random_uuid(), :r, :p, now(), now()) "
+                    "ON CONFLICT DO NOTHING"
+                )
                 await self._user_role_repo.session.execute(
-                    __import__("sqlalchemy", fromlist=["text"]).text(
-                        "INSERT INTO role_permissions (id, role_id, permission_id, created_at, updated_at) "
-                        "VALUES (gen_random_uuid(), :r, :p, now(), now()) ON CONFLICT DO NOTHING"
-                    ),
+                    __import__("sqlalchemy", fromlist=["text"]).text(sql),
                     {"r": str(role.id), "p": str(perm.id)},
                 )
         await self._user_role_repo.session.commit()

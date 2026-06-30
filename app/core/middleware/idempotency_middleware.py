@@ -25,8 +25,8 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIX = "/public/"
 
     async def dispatch(self, request: Request, call_next):
-        # Solo aplicar a la API pública para solicitudes que modifiquen estado (POST, PUT, PATCH, DELETE)
-        # y que tengan el encabezado de idempotencia.
+        # Solo aplicar a la API pública para solicitudes que modifiquen estado
+        # (POST, PUT, PATCH, DELETE) y que tengan el encabezado de idempotencia.
         if not request.url.path.startswith(self.PUBLIC_PREFIX):
             return await call_next(request)
 
@@ -61,7 +61,10 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         status_code=409,
                         content={
                             "error": "conflict",
-                            "message": "A request with this idempotency key is already in progress.",
+                            "message": (
+                                "A request with this idempotency key "
+                                "is already in progress."
+                            ),
                         },
                     )
 

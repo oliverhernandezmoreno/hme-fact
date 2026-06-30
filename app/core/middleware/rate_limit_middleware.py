@@ -35,7 +35,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             window = 60  # seconds
             now = int(time.time())
-            window_start = now - window
+            now - window
             key = f"ratelimit:{api_key_id}:{now // window}"
 
             async with redis.pipeline() as pipe:

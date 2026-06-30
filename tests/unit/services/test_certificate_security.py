@@ -1,4 +1,3 @@
-
 import pytest
 
 from app.services.certificate_security import CertificateSecurityService

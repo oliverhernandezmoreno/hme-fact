@@ -32,5 +32,7 @@ def generate_pdf417_base64(data: str) -> str:
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
     except Exception as exc:
         logger.error("Failed to generate PDF417 barcode", exc_info=exc)
-        # Return a simple 1x1 transparent PNG as fallback if pdf417gen fails
-        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        return (
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42m"
+            "NkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        )

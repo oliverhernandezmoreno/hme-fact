@@ -68,7 +68,7 @@ async def create_api_key(
             expires_in_days=body.expires_in_days,
         )
     except APIKeyServiceError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
     return {
         "id": str(result.api_key.id),
@@ -92,7 +92,7 @@ async def revoke_api_key(
     try:
         await svc.revoke(api_key_id, company_id)
     except APIKeyServiceError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.post("/{api_key_id}/rotate", summary="Rotate an API Key (revoke old, create new)")
@@ -106,7 +106,7 @@ async def rotate_api_key(
     try:
         result = await svc.rotate(api_key_id, company_id, current_user.id)
     except APIKeyServiceError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     return {
         "id": str(result.api_key.id),

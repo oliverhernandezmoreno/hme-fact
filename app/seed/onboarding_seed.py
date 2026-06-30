@@ -33,7 +33,10 @@ async def seed_chile_dte_onboarding(db: AsyncSession):
         {
             "code": "welcome",
             "title": "Bienvenido a hmEFACT",
-            "description": "Comencemos a configurar tu plataforma de facturación. Te guiaremos paso a paso.",
+            "description": (
+                "Comencemos a configurar tu plataforma de facturación. "
+                "Te guiaremos paso a paso."
+            ),
             "component_type": "welcome_screen",
             "order_index": 1,
             "required": True,

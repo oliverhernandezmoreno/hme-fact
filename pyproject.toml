@@ -52,6 +52,26 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["UP037", "UP042", "UP046"]
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.params.Depends",
+    "fastapi.Query",
+    "fastapi.params.Query",
+    "fastapi.Header",
+    "fastapi.params.Header",
+    "fastapi.Cookie",
+    "fastapi.params.Cookie",
+    "fastapi.Body",
+    "fastapi.params.Body",
+    "fastapi.Form",
+    "fastapi.params.Form",
+    "fastapi.File",
+    "fastapi.params.File",
+    "fastapi.Security",
+    "fastapi.params.Security"
+]
+
 [tool.ruff.lint.per-file-ignores]
 "app/models/*.py" = ["F821"]
 

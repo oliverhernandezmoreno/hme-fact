@@ -231,13 +231,15 @@ async def seed_demo_data() -> None:
                     customer = Customer(company_id=company.id, **customer_data)
                     session.add(customer)
                     logger.info(
-                        f"   👥 Customer created: {customer_data['legal_name']} for {company.fantasy_name}"
+                        f"   👥 Customer created: {customer_data['legal_name']} "
+                        f"for {company.fantasy_name}"
                     )
                 else:
                     for key, val in customer_data.items():
                         setattr(customer, key, val)
                     logger.info(
-                        f"   👥 Customer updated: {customer_data['legal_name']} for {company.fantasy_name}"
+                        f"   👥 Customer updated: {customer_data['legal_name']} "
+                        f"for {company.fantasy_name}"
                     )
 
             # Seed products for this company
@@ -251,13 +253,15 @@ async def seed_demo_data() -> None:
                     product = Product(company_id=company.id, **product_data)
                     session.add(product)
                     logger.info(
-                        f"   📦 Product created: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}"
+                        f"   📦 Product created: {product_data['name']} "
+                        f"(SKU: {sku}) for {company.fantasy_name}"
                     )
                 else:
                     for key, val in product_data.items():
                         setattr(product, key, val)
                     logger.info(
-                        f"   📦 Product updated: {product_data['name']} (SKU: {sku}) for {company.fantasy_name}"
+                        f"   📦 Product updated: {product_data['name']} "
+                        f"(SKU: {sku}) for {company.fantasy_name}"
                     )
 
         await session.commit()

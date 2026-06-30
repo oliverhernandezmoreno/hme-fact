@@ -57,7 +57,9 @@ PLANS_SEED = [
     {
         "code": "business",
         "name": "Business",
-        "description": "Para empresas medianas con alto volumen de facturación y múltiples sucursales.",
+        "description": (
+            "Para empresas medianas con alto volumen de facturación y múltiples sucursales."
+        ),
         "price": 79990,
         "currency": "CLP",
         "billing_cycle": "monthly",

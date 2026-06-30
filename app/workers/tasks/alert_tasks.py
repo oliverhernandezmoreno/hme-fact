@@ -29,7 +29,7 @@ async def dispatch_company_webhook(
 
     result = await session.execute(
         select(WebhookSubscription).where(
-            WebhookSubscription.company_id == company_id, WebhookSubscription.is_active == True
+            WebhookSubscription.company_id == company_id, WebhookSubscription.is_active
         )
     )
     subscriptions = result.scalars().all()
@@ -49,7 +49,7 @@ async def get_company_recipient_emails(session, company_id: uuid.UUID) -> list[s
     result = await session.execute(
         select(User.email)
         .join(CompanyUser, CompanyUser.user_id == User.id)
-        .where(CompanyUser.company_id == company_id, CompanyUser.is_active == True)
+        .where(CompanyUser.company_id == company_id, CompanyUser.is_active)
     )
     return [row[0] for row in result.fetchall() if row[0]]
 
@@ -76,9 +76,9 @@ def check_expiring_certificates_task(self):
                 select(Certificate)
                 .join(Company, Company.id == Certificate.company_id)
                 .where(
-                    Certificate.is_active == True,
+                    Certificate.is_active,
                     Certificate.valid_until <= thirty_days_later,
-                    Company.is_active == True,
+                    Company.is_active,
                 )
             )
             certificates = result.scalars().all()
@@ -95,18 +95,21 @@ def check_expiring_certificates_task(self):
                 # Trigger email
                 for email in emails:
                     subject = f"ALERTA: Certificado digital a vencer en {days_left} días"
-                    html = f"""
-                    <html><body>
-                        <h2>Alerta de Vencimiento de Certificado</h2>
-                        <p>El certificado digital con CN <strong>{cert.common_name}</strong> está próximo a vencer.</p>
-                        <ul>
-                            <li><strong>Días restantes:</strong> {days_left} días</li>
-                            <li><strong>Fecha de vencimiento:</strong> {cert.valid_until.strftime("%Y-%m-%d %H:%M:%S")}</li>
-                            <li><strong>Número de serie:</strong> {cert.serial_number}</li>
-                        </ul>
-                        <p>Por favor, renueve su certificado antes de la fecha de vencimiento para evitar interrupciones con el SII.</p>
-                    </body></html>
-                    """
+                    html = (
+                        f"<html><body>"
+                        f"<h2>Alerta de Vencimiento de Certificado</h2>"
+                        f"<p>El certificado digital con CN <strong>{cert.common_name}</strong> "
+                        f"está próximo a vencer.</p>"
+                        f"<ul>"
+                        f"<li><strong>Días restantes:</strong> {days_left} días</li>"
+                        f"<li><strong>Fecha de vencimiento:</strong> "
+                        f"{cert.valid_until.strftime('%Y-%m-%d %H:%M:%S')}</li>"
+                        f"<li><strong>Número de serie:</strong> {cert.serial_number}</li>"
+                        f"</ul>"
+                        f"<p>Por favor, renueve su certificado antes de la fecha de "
+                        f"vencimiento para evitar interrupciones con el SII.</p>"
+                        f"</body></html>"
+                    )
                     email_service.send_simple_email(email, subject, html)
 
                 # Trigger webhook
@@ -123,7 +126,8 @@ def check_expiring_certificates_task(self):
                 )
 
                 logger.info(
-                    f"Certificate expiry alert sent: cert={cert.id} company={cert.company_id} days_left={days_left}"
+                    f"Certificate expiry alert sent: cert={cert.id} "
+                    f"company={cert.company_id} days_left={days_left}"
                 )
                 alerts_triggered += 1
 
@@ -151,7 +155,7 @@ def check_depleted_cafs_task(self):
             result = await session.execute(
                 select(CAFFile)
                 .join(Company, Company.id == CAFFile.company_id)
-                .where(Company.is_active == True)
+                .where(Company.is_active)
             )
             cafs = result.scalars().all()
 
@@ -177,19 +181,23 @@ def check_depleted_cafs_task(self):
                         subject = (
                             f"ALERTA: Folios CAF tipo {caf.dte_type} agotados al {pct_used:.1f}%"
                         )
-                        html = f"""
-                        <html><body>
-                            <h2>Alerta de Consumo de Folios CAF</h2>
-                            <p>Los folios para el documento tipo <strong>{caf.dte_type}</strong> están próximos a agotarse.</p>
-                            <ul>
-                                <li><strong>Porcentaje consumido:</strong> {pct_used:.1f}%</li>
-                                <li><strong>Folios restantes:</strong> {remaining} (de {total_folios} totales)</li>
-                                <li><strong>Rango autorizado:</strong> {caf.folio_from} - {caf.folio_to}</li>
-                                <li><strong>Próximo folio a usar:</strong> {curr_folio}</li>
-                            </ul>
-                            <p>Por favor, cargue un nuevo archivo CAF para evitar bloqueos en la emisión de DTEs.</p>
-                        </body></html>
-                        """
+                        html = (
+                            f"<html><body>"
+                            f"<h2>Alerta de Consumo de Folios CAF</h2>"
+                            f"<p>Los folios para el documento tipo "
+                            f"<strong>{caf.dte_type}</strong> están próximos a agotarse.</p>"
+                            f"<ul>"
+                            f"<li><strong>Porcentaje consumido:</strong> {pct_used:.1f}%</li>"
+                            f"<li><strong>Folios restantes:</strong> {remaining} "
+                            f"(de {total_folios} totales)</li>"
+                            f"<li><strong>Rango autorizado:</strong> "
+                            f"{caf.folio_from} - {caf.folio_to}</li>"
+                            f"<li><strong>Próximo folio a usar:</strong> {curr_folio}</li>"
+                            f"</ul>"
+                            f"<p>Por favor, cargue un nuevo archivo CAF para evitar "
+                            f"bloqueos en la emisión de DTEs.</p>"
+                            f"</body></html>"
+                        )
                         email_service.send_simple_email(email, subject, html)
 
                     # Trigger webhook
@@ -210,7 +218,8 @@ def check_depleted_cafs_task(self):
                     )
 
                     logger.info(
-                        f"CAF depletion alert sent: caf={caf.id} company={caf.company_id} pct_used={pct_used:.1f}%"
+                        f"CAF depletion alert sent: caf={caf.id} "
+                        f"company={caf.company_id} pct_used={pct_used:.1f}%"
                     )
                     alerts_triggered += 1
 

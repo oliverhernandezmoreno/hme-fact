@@ -24,16 +24,15 @@ class CRUDCertificate:
         self, db: AsyncSession, company_id: uuid.UUID
     ) -> Certificate | None:
         result = await db.execute(
-            select(Certificate).where(
-                Certificate.company_id == company_id, Certificate.is_active == True
-            )
+            select(Certificate).where(Certificate.company_id == company_id, Certificate.is_active)
         )
         return result.scalars().first()
 
     async def create(
         self, db: AsyncSession, *, obj_in: CertificateCreate, company_id: uuid.UUID
     ) -> Certificate:
-        # If there's an active one, deactivate it? Depends on business logic. Usually handled in the service/endpoint.
+        # If there's an active one, deactivate it? Depends on business logic.
+        # Usually handled in the service/endpoint.
         db_obj = Certificate(company_id=company_id, **obj_in.model_dump())
         db.add(db_obj)
         await db.commit()

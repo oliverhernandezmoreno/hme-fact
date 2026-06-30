@@ -17,7 +17,7 @@ class RoleRepository(BaseRepository[Role]):
         return result.first()
 
     async def get_all_system(self) -> list[Role]:
-        result = await self.session.scalars(select(Role).where(Role.is_system == True))
+        result = await self.session.scalars(select(Role).where(Role.is_system))
         return list(result)
 
     async def get_with_permissions(self, role_id: uuid.UUID) -> Role | None:
@@ -65,7 +65,7 @@ class UserRoleRepository(BaseRepository[UserRole]):
             .where(UserRole.user_id == user_id)
         )
         if company_id is not None:
-            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id == None))
+            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id is None))
         result = await self.session.scalars(query)
         return list(result.unique())
 
@@ -78,7 +78,7 @@ class UserRoleRepository(BaseRepository[UserRole]):
             .where(UserRole.user_id == user_id, Role.name == role_name)
         )
         if company_id is not None:
-            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id == None))
+            query = query.where((UserRole.company_id == company_id) | (UserRole.company_id is None))
         result = await self.session.scalars(query)
         return result.first() is not None
 

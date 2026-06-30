@@ -11,7 +11,8 @@ class CAFParserError(Exception):
 class CAFParser:
     """
     Parses the XML CAF (Código de Autorización de Folios) file provided by the SII.
-    Extracts the authorization data and the private key used specifically to sign the Timbre Electrónico (TED).
+    Extracts the authorization data and the private key used specifically
+    to sign the Timbre Electrónico (TED).
     """
 
     @staticmethod
@@ -19,9 +20,10 @@ class CAFParser:
         try:
             root = etree.fromstring(xml_content)
         except etree.XMLSyntaxError as e:
-            raise CAFParserError(f"Archivo XML malformado: {str(e)}")
+            raise CAFParserError(f"Archivo XML malformado: {str(e)}") from e
 
-        # Namespaces are usually not present in the CAF downloaded from SII, but we handle it just in case
+        # Namespaces are usually not present in the CAF downloaded from SII,
+        # but we handle it just in case
 
         # 1. Find the <DA> (Datos de Autorización) block
         da_node = root.find(".//DA")
@@ -44,7 +46,7 @@ class CAFParser:
         except (AttributeError, ValueError) as e:
             raise CAFParserError(
                 f"Faltan campos obligatorios en el nodo <DA> o tienen un formato inválido: {str(e)}"
-            )
+            ) from e
 
         # 3. Find the Private Key <RSASK>
         rsask_node = root.find(".//RSASK")

@@ -71,7 +71,8 @@ class OnboardingRuleEngine:
     def determine_next_step(
         all_steps: list[OnboardingStepDefinition], evaluated_steps: list[StepDefinitionResponse]
     ) -> str | None:
-        # Steps are evaluated in order. Return the first one that is pending/available and can_access.
+        # Steps are evaluated in order. Return the first one that is
+        # pending/available and can_access.
         for estep in evaluated_steps:
             if estep.status in ("pending", "available", "in_progress") and estep.can_access:
                 return estep.code
