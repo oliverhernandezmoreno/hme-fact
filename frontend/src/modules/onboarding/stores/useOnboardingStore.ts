@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { env } from "@/lib/env";
 import { MOCK_ONBOARDING_SESSION } from "../mocks/onboardingMocks";
 
 interface Step {
@@ -45,7 +46,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     // Simulate API delay
     await new Promise((r) => setTimeout(r, 800));
 
-    if (process.env.NEXT_PUBLIC_USE_MOCKS === "true") {
+    if (env.NEXT_PUBLIC_USE_MOCKS) {
       set({ session: MOCK_ONBOARDING_SESSION as Session, isLoading: false });
     } else {
       // Real API call would go here
@@ -63,7 +64,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   completeStep: async (stepCode: string, payload: any) => {
     // In mock mode, we manually update the state to simulate the backend Rule Engine
-    if (process.env.NEXT_PUBLIC_USE_MOCKS === "true") {
+    if (env.NEXT_PUBLIC_USE_MOCKS) {
       const session = get().session;
       if (!session) return;
 
